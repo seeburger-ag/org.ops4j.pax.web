@@ -16,6 +16,7 @@
 
 package org.ops4j.pax.web.service.tomcat.internal;
 
+import org.apache.catalina.core.ContainerBase;
 import org.ops4j.pax.web.service.spi.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +27,16 @@ import org.slf4j.LoggerFactory;
 public class TomcatServerFactory implements ServerFactory {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(TomcatServerFactory.class);
+    private ContainerBase server;
 
-	public TomcatServerFactory() {
+	public TomcatServerFactory(ContainerBase server) {
+	    this.server = server;
 	}
 
-	@Override
-	public ServerWrapper newServer(Configuration configuration) {
-		return TomcatServerWrapper.getInstance(EmbeddedTomcat
-				.newEmbeddedTomcat(configuration));
-	}
+
+    @Override
+    public ServerWrapper newServer(Configuration configuration)
+    {
+        return new TomcatServerWrapper(server);
+    }
 }

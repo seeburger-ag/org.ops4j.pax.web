@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.ops4j.pax.web.service.tomcat.internal;
 
@@ -17,8 +17,8 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 
+import org.apache.catalina.Container;
 import org.apache.catalina.Globals;
-import org.apache.catalina.Host;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.StandardContext;
 import org.ops4j.pax.web.service.WebContainerContext;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author achim
- * 
+ *
  */
 public class HttpServiceContext extends StandardContext {
 
@@ -37,8 +37,8 @@ public class HttpServiceContext extends StandardContext {
 
 	public class ServletApplicationContext extends ApplicationContext {
 
-		public ServletApplicationContext(StandardContext context) {
-			super(context);
+		public ServletApplicationContext(String basePath, StandardContext context) {
+			super(basePath, context);
 		}
 
 		@Override
@@ -199,9 +199,9 @@ public class HttpServiceContext extends StandardContext {
 
 	/**
 	 * @param host
-	 * 
+	 *
 	 */
-	public HttpServiceContext(Host host,
+	public HttpServiceContext(Container host,
 			AccessControlContext accessControllerContext) {
 		this.accessControllerContext = accessControllerContext;
 	}
@@ -213,7 +213,7 @@ public class HttpServiceContext extends StandardContext {
 	@Override
 	public ServletContext getServletContext() {
 		if (context == null) {
-			context = new ServletApplicationContext(this);
+			context = new ServletApplicationContext("/",this);
 			if (getAltDDName() != null) {
 				context.setAttribute(Globals.ALT_DD_ATTR, getAltDDName());
 			}

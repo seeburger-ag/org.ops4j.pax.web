@@ -11,10 +11,10 @@ public class Activator implements BundleActivator {
 
 	@Override
 	public void start(BundleContext context) throws Exception {
-		context.registerService(ServerControllerFactory.class,
-				TomcatServerControllerFactory
-						.newInstance(TomcatServerStateFactory
-								.newInstance(new TomcatServerFactory())), null);
+//		context.registerService(ServerControllerFactory.class,
+//				TomcatServerControllerFactory
+//						.newInstance(TomcatServerStateFactory
+//								.newInstance(new TomcatServerFactory())), null);
 	}
 
 	@Override

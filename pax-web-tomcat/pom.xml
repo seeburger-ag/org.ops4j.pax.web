@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<!-- ~ Copyright 2012 Romain Gilles ~ ~ Licensed under the Apache License, 
-	Version 2.0 (the "License"); ~ you may not use this file except in compliance 
-	with the License. ~ You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 
-	~ ~ Unless required by applicable law or agreed to in writing, software ~ 
-	distributed under the License is distributed on an "AS IS" BASIS, ~ WITHOUT 
-	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the 
-	License for the specific language governing permissions and ~ limitations 
+<!-- ~ Copyright 2012 Romain Gilles ~ ~ Licensed under the Apache License,
+	Version 2.0 (the "License"); ~ you may not use this file except in compliance
+	with the License. ~ You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0
+	~ ~ Unless required by applicable law or agreed to in writing, software ~
+	distributed under the License is distributed on an "AS IS" BASIS, ~ WITHOUT
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the
+	License for the specific language governing permissions and ~ limitations
 	under the License. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -52,6 +52,7 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
+                <version>2.5.4</version>
 				<configuration>
 					<instructions>
 						<Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
@@ -59,10 +60,10 @@
 						<Bundle-Activator>${bundle.namespace}.internal.Activator</Bundle-Activator>
 						<Private-Package>${bundle.namespace}.internal.*</Private-Package>
 						<Import-Package>
-							org.ops4j.pax.web.service; version="${project.version}",
-							org.ops4j.pax.web.service.spi.*; version="${project.version}",
+							org.ops4j.pax.web.service; version="4.2.2",
+							org.ops4j.pax.web.service.spi.*; version="4.2.2",
 							org.ops4j.pax.swissbox.*,
-							org.ops4j.pax.web.jsp; version="${project.version}";resolution:=optional,
+							org.ops4j.pax.web.jsp; version="4.2.2";resolution:=optional,
 							javax.security.auth,
 							javax.security.auth.callback,
 							javax.security.auth.login,
@@ -77,40 +78,40 @@
 							org.apache.el.*; version="2.2",
 							org.apache.catalina,
 							org.apache.catalina.authenticator,
-							org.apache.catalina.comet,
+							<!--org.apache.catalina.comet,-->
 							org.apache.catalina.connector,
 							org.apache.catalina.core,
 							org.apache.catalina.deploy,
 							org.apache.catalina.filters,
-							org.apache.catalina.loader,
+							<!--org.apache.catalina.loader,-->
 							org.apache.catalina.manager,
-							org.apache.catalina.manager.host,
+							<!--org.apache.catalina.manager.host,
 							org.apache.catalina.manager.util,
-							org.apache.catalina.mbeans,
+							org.apache.catalina.mbeans,-->
 							org.apache.catalina.realm,
 							org.apache.catalina.security,
 							org.apache.catalina.servlets,
 							org.apache.catalina.session,
 							org.apache.catalina.ssi,
 							org.apache.catalina.startup,
-							org.apache.catalina.users,
+							<!--org.apache.catalina.users,-->
 							org.apache.catalina.util,
 							org.apache.catalina.valves,
 							org.apache.coyote,
 							org.apache.coyote.ajp,
 							org.apache.coyote.http11,
 							org.apache.coyote.http11.filters,
-							org.apache.coyote.http11.upgrade,
+							<!--org.apache.coyote.http11.upgrade,-->
 							org.apache.naming,
-							org.apache.naming.factory,
-							org.apache.naming.java,
+							<!--org.apache.naming.factory,
+							org.apache.naming.java,-->
 							org.apache.tomcat.jni,
 							org.apache.tomcat.util.net,
 							org.apache.tomcat.util.net.jsse,
-							org.apache.tomcat.util.digester,
+							<!--org.apache.tomcat.util.digester,
 							org.apache.tomcat.websocket,
 							org.apache.tomcat.websocket.pojo,
-							org.apache.tomcat.websocket.server,
+							org.apache.tomcat.websocket.server,-->
 							*,
 							!javax.microedition.io,
 							!javax.security.auth.x500,
@@ -178,7 +179,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -243,7 +244,7 @@
 		</dependency>
 
 		<!-- provided dependencies -->
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.ops4j.pax.tipi</groupId>
 			<artifactId>org.ops4j.pax.tipi.tomcat-embed-core</artifactId>
 			<scope>provided</scope>
@@ -252,7 +253,7 @@
 			<groupId>org.ops4j.pax.tipi</groupId>
 			<artifactId>org.ops4j.pax.tipi.tomcat-embed-websocket</artifactId>
 			<scope>provided</scope>
-		</dependency>
+		</dependency> -->
 
 		<!-- Provided dependencies (not transitive) -->
 		<dependency>
@@ -276,18 +277,21 @@
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-api</artifactId>
 			<scope>provided</scope>
+            <version>4.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-spi</artifactId>
 			<scope>provided</scope>
+            <version>4.2.2</version>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-jsp</artifactId>
 			<scope>provided</scope>
 			<optional>true</optional>
-		</dependency>
+            <version>4.2.2</version>
+		</dependency>-->
 
 		<!-- pax-url -->
 		<dependency>
@@ -392,16 +396,24 @@
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-runtime</artifactId>
 			<scope>test</scope>
+            <version>4.2.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.ops4j.pax.web</groupId>
+                    <artifactId>pax-web-jsp</artifactId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-extender-whiteboard</artifactId>
 			<scope>test</scope>
+            <version>4.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-extender-war</artifactId>
-			<version>${project.version}</version>
+            <version>4.2.2</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -498,7 +510,19 @@
 			<version>1.0.6</version>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.web</groupId>
+            <artifactId>jbossweb</artifactId>
+            <scope>provided</scope>
+            <version>7.0.13.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <version>3.1.0.GA</version>
+        </dependency>
 
 	</dependencies>
 
+	<version>4.2.2.SEE1</version>
 </project>

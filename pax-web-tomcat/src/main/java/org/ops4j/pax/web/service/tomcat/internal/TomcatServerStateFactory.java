@@ -41,7 +41,7 @@ public class TomcatServerStateFactory implements ServerStateFactory {
 				serverFactory);
 	}
 
-	static ServerStateFactory newInstance(ServerFactory serverFactory) {
+	public static ServerStateFactory newInstance(ServerFactory serverFactory) {
 		return new TomcatServerStateFactory(serverFactory);
 	}
 

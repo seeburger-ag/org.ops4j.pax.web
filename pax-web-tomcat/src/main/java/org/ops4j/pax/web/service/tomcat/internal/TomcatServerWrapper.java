@@ -16,8 +16,11 @@
 
 package org.ops4j.pax.web.service.tomcat.internal;
 
+import java.io.File;
+import java.net.URL;
+import java.security.AccessControlContext;
+import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.EnumSet;
 import java.util.EventListener;
@@ -25,6 +28,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,6 +37,7 @@ import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.FilterRegistration.Dynamic;
 import javax.servlet.Servlet;
+import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextListener;
@@ -51,18 +57,19 @@ import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Wrapper;
+import org.apache.catalina.authenticator.NonLoginAuthenticator;
+import org.apache.catalina.connector.CoyotePrincipal;
 import org.apache.catalina.core.ContainerBase;
+import org.apache.catalina.core.StandardWrapper;
+import org.apache.catalina.deploy.ErrorPage;
+import org.apache.catalina.deploy.FilterDef;
+import org.apache.catalina.deploy.FilterMap;
+import org.apache.catalina.deploy.LoginConfig;
+import org.apache.catalina.deploy.SecurityCollection;
+import org.apache.catalina.deploy.SecurityConstraint;
+import org.apache.catalina.realm.RealmBase;
 import org.apache.catalina.security.SecurityUtil;
-import org.apache.catalina.startup.Tomcat.ExistingStandardWrapper;
-import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
-import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.descriptor.web.ErrorPage;
-import org.apache.tomcat.util.descriptor.web.FilterDef;
-import org.apache.tomcat.util.descriptor.web.FilterMap;
-import org.apache.tomcat.util.descriptor.web.SecurityCollection;
-import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.ops4j.lang.NullArgumentException;
 import org.ops4j.pax.swissbox.core.BundleUtils;
 import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils;
@@ -87,13 +94,15 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Romain Gilles
  */
-class TomcatServerWrapper implements ServerWrapper {
+public class TomcatServerWrapper implements ServerWrapper {
 	private final class OsgiExistingStandardWrapper extends
-			ExistingStandardWrapper {
+			StandardWrapper {
 		private final ServletModel model;
+        private boolean instanceInitialized;
 
 		private OsgiExistingStandardWrapper(Servlet existing, ServletModel model) {
-			super(existing);
+			super();
+			setServletClass(existing.getClass().getName());
 			this.model = model;
 		}
 
@@ -170,7 +179,7 @@ class TomcatServerWrapper implements ServerWrapper {
 				// said so, so do not call unavailable(null).
 				throw f;
 			} catch (Throwable f) {
-				ExceptionUtils.handleThrowable(f);
+//				ExceptionUtils.handleThrowable(f);
 				getServletContext().log("StandardWrapper.Throwable", f);
 				instanceSupport.fireInstanceEvent(
 						InstanceEvent.AFTER_INIT_EVENT, servlet, f);
@@ -185,64 +194,64 @@ class TomcatServerWrapper implements ServerWrapper {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(TomcatServerWrapper.class);
 	private static final String WEB_CONTEXT_PATH = "Web-ContextPath";
-	private final EmbeddedTomcat server;
-	private final Map<HttpContext, Context> contextMap = new ConcurrentHashMap<HttpContext, Context>();
+	private final Container server;
+	private final Map<HttpContext, HttpServiceContext> contextMap = new ConcurrentHashMap<HttpContext, HttpServiceContext>();
 
 	private ServiceRegistration<ServletContext> servletContextService;
 
 	private Map<String, Object> contextAttributes;
 
-	private TomcatServerWrapper(final EmbeddedTomcat server) {
+	public TomcatServerWrapper(final Container server) {
 		NullArgumentException.validateNotNull(server, "server");
 		this.server = server;
-		((ContainerBase) server.getHost()).setStartChildren(false);
-		TomcatURLStreamHandlerFactory.disable();
+//		((ContainerBase) server.getHost()).setStartChildren(false);
+//		TomcatURLStreamHandlerFactory.disable();
 	}
 
-	static ServerWrapper getInstance(final EmbeddedTomcat server) {
-		return new TomcatServerWrapper(server);
-	}
+//	static ServerWrapper getInstance(final EmbeddedTomcat server) {
+//		return new TomcatServerWrapper(server);
+//	}
 
-	@Override
-	public void start() {
-		LOG.debug("start server");
-		try {
-			final long t1 = System.nanoTime();
-			server.getHost();
-			server.start();
-			final long t2 = System.nanoTime();
-			if (LOG.isInfoEnabled()) {
-				LOG.info("TomCat server startup in " + ((t2 - t1) / 1000000)
-						+ " ms");
-			}
-		} catch (final LifecycleException e) {
-			throw new ServerStartException(server.getServer().toString(), e);
-		}
-	}
-
-	@Override
-	public void stop() {
-		LOG.debug("stop server");
-		final LifecycleState state = server.getServer().getState();
-		if (LifecycleState.STOPPING_PREP.compareTo(state) <= 0
-				&& LifecycleState.DESTROYED.compareTo(state) >= 0) {
-			throw new IllegalStateException("stop already called!");
-		} else {
-			//CHECKSTYLE:OFF
-			try {
-				server.stop();
-				server.destroy();
-			} catch (final Throwable e) {
-				LOG.error("LifecycleException caught {}", e);
-			}
-			//CHECKSTYLE:ON
-		}
-	}
+//	@Override
+//	public void start() {
+//		LOG.debug("start server");
+//		try {
+//			final long t1 = System.nanoTime();
+//			server.getHost();
+//			server.start();
+//			final long t2 = System.nanoTime();
+//			if (LOG.isInfoEnabled()) {
+//				LOG.info("TomCat server startup in " + ((t2 - t1) / 1000000)
+//						+ " ms");
+//			}
+//		} catch (final LifecycleException e) {
+//			throw new ServerStartException(server.getServer().toString(), e);
+//		}
+//	}
+//
+//	@Override
+//	public void stop() {
+//		LOG.debug("stop server");
+//		final LifecycleState state = server.getServer().getState();
+//		if (LifecycleState.STOPPING_PREP.compareTo(state) <= 0
+//				&& LifecycleState.DESTROYED.compareTo(state) >= 0) {
+//			throw new IllegalStateException("stop already called!");
+//		} else {
+//			//CHECKSTYLE:OFF
+//			try {
+//				server.stop();
+//				server.destroy();
+//			} catch (final Throwable e) {
+//				LOG.error("LifecycleException caught {}", e);
+//			}
+//			//CHECKSTYLE:ON
+//		}
+//	}
 
 	@Override
 	public void addServlet(final ServletModel model) {
 		LOG.debug("add servlet [{}]", model);
-		final Context context = findOrCreateContext(model.getContextModel());
+		final HttpServiceContext context = findOrCreateContext(model.getContextModel());
 		final String servletName = model.getName();
 		if (model.getServlet() == null) {
 			// will do class for name and set init params
@@ -264,7 +273,7 @@ class TomcatServerWrapper implements ServerWrapper {
 											.getServletRegistrations();
 									//CHECKSTYLE:OFF
 									if (!servletRegistrations
-											.containsKey(servletName)) { 
+											.containsKey(servletName)) {
 										LOG.debug("need to re-register the servlet ...");
 										createServletWrapper(model, context,
 												servletName, servlet);
@@ -293,7 +302,7 @@ class TomcatServerWrapper implements ServerWrapper {
 											.getServletRegistrations();
 									//CHECKSTYLE:OFF
 									if (!servletRegistrations
-											.containsKey(servletName)) { 
+											.containsKey(servletName)) {
 										LOG.debug("need to re-register the servlet ...");
 										sw.setServletClass(model
 												.getServletClass().getName());
@@ -326,7 +335,7 @@ class TomcatServerWrapper implements ServerWrapper {
 
 					@Override
 					public void lifecycleEvent(LifecycleEvent event) {
-						if (Lifecycle.BEFORE_START_EVENT.equalsIgnoreCase(event
+						if (Lifecycle.AFTER_START_EVENT.equalsIgnoreCase(event
 								.getType())) {
 							Map<String, ? extends ServletRegistration> servletRegistrations = context
 									.getServletContext()
@@ -373,9 +382,9 @@ class TomcatServerWrapper implements ServerWrapper {
 		if (model.getLoadOnStartup() != null) {
 			sw.setLoadOnStartup(model.getLoadOnStartup());
 		}
-		if (model.getMultipartConfig() != null) {
-			sw.setMultipartConfigElement(model.getMultipartConfig());
-		}
+//		if (model.getMultipartConfig() != null) {
+//			sw.setMultipartConfigElement(model.getMultipartConfig());
+//		}
 
 	}
 
@@ -408,34 +417,39 @@ class TomcatServerWrapper implements ServerWrapper {
 			LOG.info("ServletContext service already removed");
 		}
 
-		final Context context = contextMap.remove(httpContext);
-		this.server.getHost().removeChild(context);
+		final HttpServiceContext context = contextMap.remove(httpContext);
+		this.server.removeChild(context);
 		if (context == null) {
 			throw new RemoveContextException(
 					"cannot remove the context because it does not exist: "
 							+ httpContext);
 		}
 		try {
-			final LifecycleState state = context.getState();
-			if (LifecycleState.DESTROYED != state
-					|| LifecycleState.DESTROYING != state) {
+			final int state = context.getState();
+			if (STOPPED != state)
+//					|| LifecycleState.DESTROYING != state)
+			{
 				context.destroy();
 			}
 		} catch (final LifecycleException e) {
 			throw new RemoveContextException("cannot destroy the context: "
 					+ httpContext, e);
 		}
+        catch (Exception e)
+        {
+            throw new RemoveContextException("cannot destroy the context: "
+                            + httpContext, e);
+        }
 	}
 
 	@Override
 	public void addEventListener(final EventListenerModel eventListenerModel) {
 		LOG.debug("add event listener: [{}]", eventListenerModel);
 
-		final Context context = findOrCreateContext(eventListenerModel);
-		LifecycleState state = ((HttpServiceContext) context).getState();
+		final HttpServiceContext context = findOrCreateContext(eventListenerModel);
+		int state = ((HttpServiceContext) context).getState();
 		boolean restartContext = false;
-		if ((LifecycleState.STARTING.equals(state) || LifecycleState.STARTED
-				.equals(state))
+		if ((STARTING==state || STARTED==state)
 				&& !eventListenerModel.getContextModel().isWebBundle()) {
 			try {
 				restartContext = true;
@@ -448,7 +462,7 @@ class TomcatServerWrapper implements ServerWrapper {
 
 			@Override
 			public void lifecycleEvent(LifecycleEvent event) {
-				if (Lifecycle.BEFORE_START_EVENT.equalsIgnoreCase(event
+				if (Lifecycle.AFTER_START_EVENT.equalsIgnoreCase(event
 						.getType())) {
 					context.getServletContext().addListener(
 							eventListenerModel.getEventListener());
@@ -492,12 +506,12 @@ class TomcatServerWrapper implements ServerWrapper {
 		if (!isApplicationLifecycleListener(eventListener)) {
 			return false;
 		}
-		
+
 		Object[] applicationLifecycleListeners = context.getApplicationLifecycleListeners();
-		
+
 		List<EventListener> listeners = new ArrayList<>();
 		boolean found = filterEventListener(listeners, applicationLifecycleListeners, eventListener);
-		
+
 		if (found) {
 			context.setApplicationLifecycleListeners(listeners.toArray());
 		}
@@ -516,10 +530,10 @@ class TomcatServerWrapper implements ServerWrapper {
 		}
 		Object[] applicationEventListeners = context
 				.getApplicationEventListeners();
-		
+
 		List<EventListener> newEventListeners = new ArrayList<>();
 		boolean found = filterEventListener(newEventListeners, applicationEventListeners, eventListener);
-		
+
 
 		if (found) {
 			context.setApplicationEventListeners(newEventListeners
@@ -527,11 +541,11 @@ class TomcatServerWrapper implements ServerWrapper {
 		}
 		return found;
 	}
-	
+
 	private boolean filterEventListener(List<EventListener> listeners, Object[] applicationEventListeners, EventListener eventListener) {
-		
+
 		boolean found = false;
-		
+
 		for (Object object : applicationEventListeners) {
 			EventListener listener = (EventListener) object;
 			if (listener != eventListener) {
@@ -540,11 +554,11 @@ class TomcatServerWrapper implements ServerWrapper {
 				found = true;
 			}
 		}
-		
+
 		return found;
-		
+
 	}
-	
+
 
 	private boolean isApplicationEventListener(final EventListener eventListener) {
 		return (eventListener instanceof ServletContextAttributeListener
@@ -552,15 +566,20 @@ class TomcatServerWrapper implements ServerWrapper {
 				|| eventListener instanceof ServletRequestAttributeListener || eventListener instanceof HttpSessionAttributeListener);
 	}
 
+	private static final int STARTED = 1;
+	private static final int STARTING = 0;
+	private static final int STOPPED = 3;
+	private static final int FAILED = 4;
+
 	@Override
 	public void addFilter(final FilterModel filterModel) {
 		LOG.debug("add filter [{}]", filterModel);
 
-		final Context context = findOrCreateContext(filterModel);
-		LifecycleState state = ((HttpServiceContext) context).getState();
+		final HttpServiceContext context = findOrCreateContext(filterModel);
+		int state = context.getState();
+//		LifecycleState state = ((HttpServiceContext) context).getState();
 		boolean restartContext = false;
-		if ((LifecycleState.STARTING.equals(state) || LifecycleState.STARTED
-				.equals(state)) && !filterModel.getContextModel().isWebBundle()) {
+		if ((STARTING==state || STARTED ==state) && !filterModel.getContextModel().isWebBundle()) {
 			try {
 				restartContext = true;
 				((HttpServiceContext) context).stop();
@@ -568,63 +587,55 @@ class TomcatServerWrapper implements ServerWrapper {
 				LOG.warn("Can't reset the Lifecycle ... ", e);
 			}
 		}
-		context.addLifecycleListener(new LifecycleListener() {
+		context.addLifecycleListener(new LifecycleListener()
+        {
 
-			@Override
-			public void lifecycleEvent(LifecycleEvent event) {
-				if (Lifecycle.BEFORE_START_EVENT.equalsIgnoreCase(event
-						.getType())) {
-					FilterRegistration.Dynamic filterRegistration = null;
-					if (filterModel.getFilter() != null) {
-						filterRegistration = context
-								.getServletContext().addFilter(
-										filterModel.getName(),
-										filterModel.getFilter());
-						
-					} else if (filterModel.getFilterClass() != null) {
-						filterRegistration = context
-								.getServletContext().addFilter(
-										filterModel.getName(),
-										filterModel.getFilterClass());
-					}
-					
-					if (filterRegistration == null) {
-						filterRegistration = (Dynamic) context
-								.getServletContext().getFilterRegistration(
-										filterModel.getName());
-						if (filterRegistration == null) {
-							LOG.error("Can't register Filter due to unknown reason!");
-						}
-					}
+            @Override
+            public void lifecycleEvent(LifecycleEvent event)
+            {
+                if (Lifecycle.AFTER_START_EVENT.equalsIgnoreCase(event.getType()))
+                {
+                    FilterRegistration.Dynamic filterRegistration = null;
+                    if (filterModel.getFilter() != null)
+                    {
+                        filterRegistration = context.getServletContext().addFilter(filterModel.getName(), filterModel.getFilter());
 
-					if (filterModel.getServletNames() != null
-							&& filterModel.getServletNames().length > 0) {
-						filterRegistration.addMappingForServletNames(
-								getDispatcherTypes(filterModel), /*
-																 * TODO get
-																 * asynch
-																 * supported?
-																 */false,
-								filterModel.getServletNames());
-					} else if (filterModel.getUrlPatterns() != null
-							&& filterModel.getUrlPatterns().length > 0) {
-						filterRegistration.addMappingForUrlPatterns(
-								getDispatcherTypes(filterModel), /*
-																 * TODO get
-																 * asynch
-																 * supported?
-																 */false,
-								filterModel.getUrlPatterns());
-					} else {
-						throw new AddFilterException(
-								"cannot add filter to the context; at least a not empty list of servlet names or URL patterns in exclusive mode must be provided: "
-										+ filterModel);
-					}
-					filterRegistration.setInitParameters(filterModel
-							.getInitParams());
-				}
-			}
-		});
+                    }
+                    else if (filterModel.getFilterClass() != null)
+                    {
+                        filterRegistration = context.getServletContext().addFilter(filterModel.getName(), filterModel.getFilterClass());
+                    }
+
+                    if (filterRegistration == null)
+                    {
+                        filterRegistration = (Dynamic)context.getServletContext().getFilterRegistration(filterModel.getName());
+                        if (filterRegistration == null)
+                        {
+                            LOG.error("Can't register Filter due to unknown reason!");
+                        }
+                    }
+
+                    if (filterModel.getServletNames() != null && filterModel.getServletNames().length > 0)
+                    {
+                        filterRegistration.addMappingForServletNames(getDispatcherTypes(filterModel), /*
+                                                                                                       * TODO get asynch supported?
+                                                                                                       */false, filterModel.getServletNames());
+                    }
+                    else if (filterModel.getUrlPatterns() != null && filterModel.getUrlPatterns().length > 0)
+                    {
+                        filterRegistration.addMappingForUrlPatterns(getDispatcherTypes(filterModel), /*
+                                                                                                      * TODO get asynch supported?
+                                                                                                      */false, filterModel.getUrlPatterns());
+                    }
+                    else
+                    {
+                        throw new AddFilterException("cannot add filter to the context; at least a not empty list of servlet names or URL patterns in exclusive mode must be provided: " + filterModel);
+                    }
+                    filterRegistration.setInitParameters(filterModel.getInitParams());
+                }
+            }
+        });
+
 
 		if (restartContext) {
 			try {
@@ -667,13 +678,13 @@ class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void addErrorPage(final ErrorPageModel model) {
-		final Context context = findContext(model);
-		if (context == null) {
-			throw new AddErrorPageException(
-					"cannot retrieve the associated context: " + model);
-		}
-		final ErrorPage errorPage = createErrorPage(model);
-		context.addErrorPage(errorPage);
+//		final Context context = findContext(model);
+//		if (context == null) {
+//			throw new AddErrorPageException(
+//					"cannot retrieve the associated context: " + model);
+//		}
+//		final ErrorPage errorPage = createErrorPage(model);
+//		context.addErrorPage(errorPage);
 	}
 
 	private ErrorPage createErrorPage(final ErrorPageModel model) {
@@ -768,7 +779,7 @@ class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public LifeCycle getContext(final ContextModel model) {
-		final Context context = findOrCreateContext(model);
+		final HttpServiceContext context = findOrCreateContext(model);
 		if (context == null) {
 			throw new RemoveErrorPageException(
 					"cannot retrieve the associated context: " + model);
@@ -776,11 +787,10 @@ class TomcatServerWrapper implements ServerWrapper {
 		return new LifeCycle() {
 			@Override
 			public void start() throws Exception {
-				ContainerBase host = (ContainerBase) TomcatServerWrapper.this.server
-						.getHost();
+				ContainerBase host = (ContainerBase) TomcatServerWrapper.this.server;
 				host.setStartChildren(true);
 
-				if (!context.getState().isAvailable()) {
+				if (context.getState()!=STARTED && context.getState()!=STARTING) {
 					LOG.info("server is available, in state {}",
 							context.getState());
 
@@ -827,14 +837,14 @@ class TomcatServerWrapper implements ServerWrapper {
 		}
 	}
 
-	private Context findOrCreateContext(final Model model) {
+	private HttpServiceContext findOrCreateContext(final Model model) {
 		NullArgumentException.validateNotNull(model, "model");
 		return findOrCreateContext(model.getContextModel());
 	}
 
-	private Context findOrCreateContext(final ContextModel contextModel) {
+	private HttpServiceContext findOrCreateContext(final ContextModel contextModel) {
 		HttpContext httpContext = contextModel.getHttpContext();
-		Context context = contextMap.get(httpContext);
+		HttpServiceContext context = contextMap.get(httpContext);
 
 		if (context == null) {
 			context = createContext(contextModel);
@@ -842,20 +852,48 @@ class TomcatServerWrapper implements ServerWrapper {
 		return context;
 	}
 
-	private Context createContext(final ContextModel contextModel) {
+	private HttpServiceContext createContext(final ContextModel contextModel) {
 		final Bundle bundle = contextModel.getBundle();
 		final BundleContext bundleContext = BundleUtils
 				.getBundleContext(bundle);
 
-		final Context context = server.addContext(
+		String basePath = System.getProperty("javax.servlet.context.tempdir",System.getProperty("java.io.tmpdir"));
+		final HttpServiceContext context = addContext(
 				contextModel.getContextParams(),
 				getContextAttributes(bundleContext),
 				contextModel.getContextName(), contextModel.getHttpContext(),
 				contextModel.getAccessControllerContext(),
 				contextModel.getContainerInitializers(),
 				contextModel.getJettyWebXmlURL(),
-				contextModel.getVirtualHosts(), null /*contextModel.getConnectors() */,
-				server.getBasedir());
+				contextModel.getVirtualHosts(),
+				null /*contextModel.getConnectors() */,
+				new File(basePath).getAbsolutePath()
+				);
+
+
+        context.setRealm(new RealmBase()
+        {
+
+            @Override
+            protected Principal getPrincipal(String username)
+            {
+                return new CoyotePrincipal(username);
+            }
+
+
+            @Override
+            protected String getPassword(String username)
+            {
+                return "";
+            }
+
+
+            @Override
+            protected String getName()
+            {
+                return "kool realm v1.0";
+            }
+        });
 
 		context.setParentClassLoader(contextModel.getClassLoader());
 		// TODO: is the context already configured?
@@ -863,9 +901,8 @@ class TomcatServerWrapper implements ServerWrapper {
 		// TODO: compare with JettyServerWrapper.addContext
 		// TODO: what about the init parameters?
 
-		final LifecycleState state = context.getState();
-		if (state != LifecycleState.STARTED && state != LifecycleState.STARTING
-				&& state != LifecycleState.STARTING_PREP) {
+		final int state = context.getState();
+		if (state !=STARTED && state != STARTING) {
 
 			LOG.debug("Registering ServletContext as service. ");
 			final Dictionary<String, String> properties = new Hashtable<String, String>();
@@ -913,22 +950,159 @@ class TomcatServerWrapper implements ServerWrapper {
 		return context;
 	}
 
-	private Context findContext(final ContextModel contextModel) {
-		return server.findContext(contextModel);
-	}
+
+    public HttpServiceContext addContext(Map<String, String> contextParams, Map<String, Object> contextAttributes, String contextName, HttpContext httpContext, AccessControlContext accessControllerContext, Map<ServletContainerInitializer, Set<Class< ? >>> containerInitializers, URL jettyWebXmlURL, List<String> virtualHosts, List<String> connectors, String basedir)
+    {
+//        silence(host, "/" + contextName);
+        HttpServiceContext ctx = new HttpServiceContext(server, accessControllerContext);
+        String name = generateContextName(contextName, httpContext);
+        LOG.info("registering context {}, with context-name: {}", httpContext, name);
+
+//        ctx.setWebappVersion(name);
+        ctx.setName(name);
+        ctx.setPath("/" + contextName);
+        ctx.setDocBase(basedir);
+        final BundleContext bundleContext = (BundleContext)contextAttributes.get(WebContainerConstants.BUNDLE_CONTEXT_ATTRIBUTE);
+        ctx.addLifecycleListener(new LifecycleListener()
+        {
+            @Override
+            public void lifecycleEvent(LifecycleEvent event)
+            {
+                try {
+                    Context context = (Context) event.getLifecycle();
+                    if (event.getType().equals(Lifecycle.START_EVENT)) {
+                        context.setConfigured(true);
+                        context.setInstanceManager(new SimpleInstanceManager(bundleContext.getBundle()));
+                    }
+                    // LoginConfig is required to process @ServletSecurity
+                    // annotations
+                    if (context.getLoginConfig() == null) {
+                        context.setLoginConfig(new LoginConfig("NONE", null, null, null));
+                        context.getPipeline().addValve(new NonLoginAuthenticator());
+                    }
+                } catch (ClassCastException e) {
+                    return;
+                }
+            }
+        });
+
+        // Add Session config
+//        ctx.setSessionCookieName(configurationSessionCookie);
+        // configurationSessionCookieHttpOnly
+//        ctx.setUseHttpOnly(configurationSessionCookieHttpOnly);
+        // configurationSessionTimeout
+//        ctx.setSessionTimeout(configurationSessionTimeout);
+        // configurationWorkerName //TODO: missing
+
+        // new OSGi methods
+        ((HttpServiceContext)ctx).setHttpContext(httpContext);
+        // TODO: what about the AccessControlContext?
+        // TODO: the virtual host section below
+        // TODO: what about the VirtualHosts?
+        // TODO: what about the tomcat-web.xml config?
+        // TODO: connectors are needed for virtual host?
+        if (containerInitializers != null)
+        {
+            for (Entry<ServletContainerInitializer, Set<Class< ? >>> entry : containerInitializers.entrySet())
+            {
+//                ctx.addServletContainerInitializer(entry.getKey(), entry.getValue());
+            }
+        }
+
+        // Add default JSP ContainerInitializer
+//        if (isJspAvailable())
+//        { // use JasperClassloader
+//            try
+//            {
+//                @SuppressWarnings("unchecked")
+//                Class<ServletContainerInitializer> loadClass = (Class<ServletContainerInitializer>)getClass().getClassLoader().loadClass("org.ops4j.pax.web.jsp.JasperInitializer");
+//                ctx.addServletContainerInitializer(loadClass.newInstance(), null);
+//            }
+//            catch (ClassNotFoundException e)
+//            {
+//                LOG.error("Unable to load JasperInitializer", e);
+//            }
+//            catch (InstantiationException e)
+//            {
+//                LOG.error("Unable to instantiate JasperInitializer", e);
+//            }
+//            catch (IllegalAccessException e)
+//            {
+//                LOG.error("Unable to instantiate JasperInitializer", e);
+//            }
+//        }
+
+//        if (host == null)
+//        {
+//            server.setStartChildren(false);
+            ctx.setParent(server);
+            server.addChild(ctx);
+//        }
+//        else
+//        {
+//            ((ContainerBase)host).setStartChildren(false);
+//            host.addChild(ctx);
+//        }
+
+        // Custom Service Valve for checking authentication stuff ...
+//        ctx.getPipeline().addValve(new ServiceValve(httpContext));
+        // Custom OSGi Security
+//        ctx.getPipeline().addValve(new OSGiAuthenticatorValve(httpContext));
+
+        // add mimetypes here?
+        // MIME mappings
+//        for (int i = 0; i < DEFAULT_MIME_MAPPINGS.length;)
+//        {
+//            ctx.addMimeMapping(DEFAULT_MIME_MAPPINGS[i++], DEFAULT_MIME_MAPPINGS[i++]);
+//        }
+
+        // try {
+        // ctx.stop();
+        // } catch (LifecycleException e) {
+        // LOG.error("context couldn't be started", e);
+        // // e.printStackTrace();
+        // }
+        return ctx;
+    }
+
+    public String generateContextName(String contextName,
+                                      HttpContext httpContext) {
+                                  String name;
+                                  if (contextName != null) {
+                                      name = "[" + contextName + "]-" + httpContext.getClass().getName();
+                                  } else {
+                                      name = "[]-" + httpContext.getClass().getName();
+                                  }
+                                  return name;
+                              }
+
 
 	private Context findContext(final Model model) {
 		return findContext(model.getContextModel());
 	}
 
+    public Context findContext(ContextModel contextModel) {
+        String name = generateContextName(contextModel.getContextName(),
+                contextModel.getHttpContext());
+        return findContext(name);
+    }
+
+    Context findContext(String contextName) {
+        return (Context) findContainer(contextName);
+    }
+
+    Container findContainer(String contextName) {
+        return server.findChild(contextName);
+    }
+
 	/**
 	 * Returns a list of servlet context attributes out of configured properties
 	 * and attribues containing the bundle context associated with the bundle
 	 * that created the model (web element).
-	 * 
+	 *
 	 * @param bundleContext
 	 *            bundle context to be set as attribute
-	 * 
+	 *
 	 * @return context attributes map
 	 */
 	private Map<String, Object> getContextAttributes(
@@ -948,7 +1122,7 @@ class TomcatServerWrapper implements ServerWrapper {
 	@Override
 	public void addWelcomeFiles(WelcomeFileModel model) {
 		final Context context = findOrCreateContext(model.getContextModel());
-		
+
 		for (String welcomeFile : model.getWelcomeFiles()) {
 			context.addWelcomeFile(welcomeFile);
 		}
@@ -962,4 +1136,18 @@ class TomcatServerWrapper implements ServerWrapper {
 			context.removeWelcomeFile(welcomeFile);
 		}
 	}
+
+    @Override
+    public void start()
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void stop()
+    {
+        // TODO Auto-generated method stub
+
+    }
 }

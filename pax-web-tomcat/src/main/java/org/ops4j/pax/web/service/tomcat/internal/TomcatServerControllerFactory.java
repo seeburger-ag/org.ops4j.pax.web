@@ -22,7 +22,7 @@ public class TomcatServerControllerFactory implements ServerControllerFactory {
 				.newInstalledState());
 	}
 
-	static ServerControllerFactory newInstance(
+	public static ServerControllerFactory newInstance(
 			ServerStateFactory serverStateFactory) {
 		return new TomcatServerControllerFactory(serverStateFactory);
 	}

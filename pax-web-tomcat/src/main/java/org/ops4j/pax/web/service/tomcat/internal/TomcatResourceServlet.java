@@ -22,12 +22,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * can be based on org.apache.catalina.servlets.DefaultServlet
- * 
+ *
  * @author Romain Gilles Date: 7/26/12 Time: 10:41 AM
  */
 public class TomcatResourceServlet extends HttpServlet {
 	/**
-     * 
+     *
      */
 	private static final long serialVersionUID = 1L;
 
@@ -107,7 +107,7 @@ public class TomcatResourceServlet extends HttpServlet {
 
 		final URL url = httpContext.getResource(mapping);
 
-		if (url == null 
+		if (url == null
 				|| (url != null && "//".equals(mapping) && "bundleentry".equalsIgnoreCase(url.getProtocol()) )
 				|| (url != null && "/".equals(mapping)) && "bundleentry".equalsIgnoreCase(url.getProtocol()) ) {
 			if (!response.isCommitted()) {
@@ -175,9 +175,9 @@ public class TomcatResourceServlet extends HttpServlet {
 			while (r instanceof ServletResponseWrapper) {
 				r = ((ServletResponseWrapper) r).getResponse();
 			}
-			if (r instanceof ResponseFacade) {
-				((ResponseFacade) r).getContentWritten();
-			}
+//			if (r instanceof ResponseFacade) {
+//				((ResponseFacade) r).getContentWritten();
+//			}
 
 			IOException ioException = copyRange(url.openStream(), out);
 
@@ -194,7 +194,7 @@ public class TomcatResourceServlet extends HttpServlet {
 	 * Copy the contents of the specified input stream to the specified output
 	 * stream, and ensure that both streams are closed before returning (even in
 	 * the face of an exception).
-	 * 
+	 *
 	 * @param istream
 	 *            The input stream to read from
 	 * @param ostream
