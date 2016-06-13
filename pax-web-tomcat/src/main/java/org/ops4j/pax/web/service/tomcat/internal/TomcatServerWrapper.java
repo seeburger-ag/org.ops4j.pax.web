@@ -99,10 +99,12 @@ public class TomcatServerWrapper implements ServerWrapper {
 			StandardWrapper {
 		private final ServletModel model;
         private boolean instanceInitialized;
+        private Servlet existing;
 
 		private OsgiExistingStandardWrapper(Servlet existing, ServletModel model) {
 			super();
 			setServletClass(existing.getClass().getName());
+			this.existing = existing;
 			this.model = model;
 		}
 
@@ -141,6 +143,28 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 			// skip the JMX part not needed here!
 		}
+
+        @Override
+        public synchronized Servlet loadServlet() throws ServletException {
+            if (singleThreadModel) {
+                Servlet instance;
+                try {
+                    instance = existing.getClass().newInstance();
+                } catch (InstantiationException e) {
+                    throw new ServletException(e);
+                } catch (IllegalAccessException e) {
+                    throw new ServletException(e);
+                }
+                instance.init(facade);
+                return instance;
+            } else {
+                if (!instanceInitialized) {
+                    existing.init(facade);
+                    instanceInitialized = true;
+                }
+                return existing;
+            }
+        }
 
 		private synchronized void initServlet(Servlet servlet)
 				throws ServletException {
