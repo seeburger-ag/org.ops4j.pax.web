@@ -975,7 +975,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 	}
 
 
-    public HttpServiceContext addContext(Map<String, String> contextParams, Map<String, Object> contextAttributes, String contextName, HttpContext httpContext, AccessControlContext accessControllerContext, Map<ServletContainerInitializer, Set<Class< ? >>> containerInitializers, URL jettyWebXmlURL, List<String> virtualHosts, List<String> connectors, String basedir)
+    public HttpServiceContext addContext(final Map<String, String> contextParams, final Map<String, Object> contextAttributes, String contextName, HttpContext httpContext, AccessControlContext accessControllerContext, Map<ServletContainerInitializer, Set<Class< ? >>> containerInitializers, URL jettyWebXmlURL, List<String> virtualHosts, List<String> connectors, String basedir)
     {
 //        silence(host, "/" + contextName);
         HttpServiceContext ctx = new HttpServiceContext(server, accessControllerContext);
@@ -997,6 +997,14 @@ public class TomcatServerWrapper implements ServerWrapper {
                     if (event.getType().equals(Lifecycle.START_EVENT)) {
                         context.setConfigured(true);
                         context.setInstanceManager(new SimpleInstanceManager(bundleContext.getBundle()));
+                        for (Entry<String, String> e : contextParams.entrySet())
+                        {
+                            context.getServletContext().setInitParameter(e.getKey(), e.getValue());
+                        }
+                        for (Entry<String, Object> e : contextAttributes.entrySet())
+                        {
+                            context.getServletContext().setAttribute(e.getKey(), e.getValue());
+                        }
                     }
                     // LoginConfig is required to process @ServletSecurity
                     // annotations
@@ -1009,6 +1017,11 @@ public class TomcatServerWrapper implements ServerWrapper {
                 }
             }
         });
+
+        for (Entry<String, String> e : contextParams.entrySet())
+        {
+            ctx.addParameter(e.getKey(), e.getValue());
+        }
 
         // Add Session config
 //        ctx.setSessionCookieName(configurationSessionCookie);
