@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.ops4j.pax.web</groupId>
+    <artifactId>servlet-bridge</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>war</packaging>
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <X-See-Deployfilter>(|(role~=AdapterEngine)(role~=ProcessEngine)(role~=WLH)(role~=DataStore)(role~=AdminServer)(role~=SILBackend)(role~=UserManagement)(role~=PortalEngine))</X-See-Deployfilter>
+                            <Dependencies>deployment.pax-web-tomcat-4.2.2.SEE1.jar</Dependencies>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

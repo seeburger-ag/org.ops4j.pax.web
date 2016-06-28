@@ -1,0 +1,6 @@
+<jboss-web>
+    <valve>
+        <class-name>org.ops4j.pax.web.service.tomcat.HttpServiceValve</class-name>
+    </valve>
+    <context-root>/valve2</context-root>
+</jboss-web>
