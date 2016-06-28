@@ -84,7 +84,7 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 	/**
 	 * Call preDestroy method on the specified instance recursively from deepest
 	 * superclass to actual class.
-	 * 
+	 *
 	 * @param instance
 	 *            object to call preDestroy methods on
 	 * @param clazz
@@ -127,7 +127,7 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 	/**
 	 * Make sure that the annotations cache has been populated for the provided
 	 * class.
-	 * 
+	 *
 	 * @param clazz
 	 *            clazz to populate annotations for
 	 * @param injections
@@ -153,11 +153,11 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 				// Initialize methods annotations
 				Method[] methods = null;
 				methods = clazz.getDeclaredMethods();
-
+//				getClass().getClassLoader().loadClass("javax.annotation.PostConstruct")
 				Method postConstruct = null;
 				Method preDestroy = null;
 				for (Method method : methods) {
-
+				try {
 					if (method.isAnnotationPresent(PostConstruct.class)) {
 						if ((postConstruct != null)
 								|| (method.getParameterTypes().length != 0)
@@ -182,6 +182,8 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 						}
 						preDestroy = method;
 					}
+				}
+				catch (Throwable t) { /*nope*/ } //FIXME
 				}
 				if (postConstruct != null) {
 					annotations.add(new AnnotationCacheEntry(postConstruct

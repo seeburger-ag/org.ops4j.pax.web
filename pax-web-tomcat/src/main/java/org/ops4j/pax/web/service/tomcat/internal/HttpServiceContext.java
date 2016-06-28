@@ -12,13 +12,18 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.apache.catalina.Container;
 import org.apache.catalina.Globals;
+import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.StandardContext;
 import org.ops4j.pax.web.service.WebContainerContext;
@@ -197,6 +202,8 @@ public class HttpServiceContext extends StandardContext {
 	 */
 	private final AccessControlContext accessControllerContext;
 
+    private Set<ServletContainerInitializer> initializers;
+
 	/**
 	 * @param host
 	 *
@@ -204,6 +211,7 @@ public class HttpServiceContext extends StandardContext {
 	public HttpServiceContext(Container host,
 			AccessControlContext accessControllerContext) {
 		this.accessControllerContext = accessControllerContext;
+		initializers = Collections.newSetFromMap(new ConcurrentHashMap<ServletContainerInitializer, Boolean>());
 	}
 
 	public void setHttpContext(HttpContext httpContext) {
@@ -221,4 +229,25 @@ public class HttpServiceContext extends StandardContext {
 		return super.getServletContext();
 	}
 
+	public void addServletContainerInitializer(ServletContainerInitializer initializer)
+	{
+	    initializers.add(initializer);
+	}
+
+	@Override
+	public synchronized void start() throws LifecycleException
+	{
+	    super.start();
+	    for (ServletContainerInitializer initializer : initializers)
+        {
+	        try
+	        {
+	            initializer.onStartup(null, getServletContext());
+	        }
+	        catch (ServletException e)
+	        {
+	            throw new LifecycleException(e);
+	        }
+        }
+	}
 }

@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.catalina.connector.ResponseFacade;
+import org.apache.catalina.Globals;
 import org.osgi.service.http.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +104,36 @@ public class TomcatResourceServlet extends HttpServlet {
 				}
 			}
 		}
-
+        if ("//".equals(mapping))
+        {
+            String[] welcomes = (String[])getServletContext().getAttribute(Globals.WELCOME_FILES_ATTR);
+            if (welcomes != null)
+            {
+                int i; URL url = null;
+                for (i = 0; i < welcomes.length && url == null; i++)
+                {
+                  url = httpContext.getResource(mapping+welcomes[i]);
+                  try
+                  {
+                      if (url != null && url.openConnection() != null)
+                      {
+                          break;
+                      }
+                  }
+                  catch (IOException ioe) { /* ignore */ }
+                }
+                if (url != null)
+                {
+                    response.sendRedirect(request.getRequestURI()+welcomes[i]);
+                }
+            }
+            //don't allow access to '/' as a resource
+            if (!response.isCommitted())
+            {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            }
+            return;
+        }
 		final URL url = httpContext.getResource(mapping);
 
 		if (url == null

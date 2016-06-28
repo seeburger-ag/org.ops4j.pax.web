@@ -8,6 +8,8 @@
 package org.ops4j.pax.web.service.tomcat;
 
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
@@ -31,16 +33,17 @@ public class HttpServiceValve extends ValveBase implements Valve
 {
 
     private boolean initialized;
-    private Container host;
+    private ContainerBase host;
     private BundleContext context;
 
 
     @Override
     public void setContainer(Container container)
     {
-       super.setContainer(container);
-       initialize();
+        super.setContainer(container);
+        initialize();
     }
+
 
     @Override
     public void invoke(Request request, Response response) throws IOException, ServletException
@@ -61,24 +64,21 @@ public class HttpServiceValve extends ValveBase implements Valve
         {
             if (localContext instanceof StandardContext)
             {
-                Thread t = new Thread()
+                localContext.addPropertyChangeListener(new PropertyChangeListener()
                 {
+
                     @Override
-                    public void run()
+                    public void propertyChange(PropertyChangeEvent evt)
                     {
-                        try
+                        if ("parent".equals(evt.getPropertyName()))
                         {
-                            while ((host = ((StandardContext)localContext).getParent()) == null)
-                            {
-                                Thread.sleep(2000);
-                            }
-                            ServerControllerFactory factory = TomcatServerControllerFactory.newInstance(TomcatServerStateFactory.newInstance(new TomcatServerFactory((ContainerBase)host)));
+                            host = (ContainerBase)evt.getNewValue();
+                            ServerControllerFactory factory = TomcatServerControllerFactory.newInstance(TomcatServerStateFactory.newInstance(new TomcatServerFactory(host)));
                             context.registerService(ServerControllerFactory.class, factory, null);
+                            localContext.removePropertyChangeListener(this);
                         }
-                        catch (InterruptedException e) {}
                     }
-                };
-                t.start();
+                });
             }
         }
 

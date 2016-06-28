@@ -63,7 +63,7 @@
 							org.ops4j.pax.web.service; version="4.2.2",
 							org.ops4j.pax.web.service.spi.*; version="4.2.2",
 							org.ops4j.pax.swissbox.*,
-							org.ops4j.pax.web.jsp; version="4.2.2";resolution:=optional,
+							org.ops4j.pax.web.jsp; version="4.2.2.SEE1";resolution:=optional,
 							javax.security.auth,
 							javax.security.auth.callback,
 							javax.security.auth.login,
@@ -285,13 +285,38 @@
 			<scope>provided</scope>
             <version>4.2.2</version>
 		</dependency>
-		<!--<dependency>
+
+        <dependency>
+            <groupId>org.jboss.web</groupId>
+            <artifactId>jbossweb</artifactId>
+            <scope>provided</scope>
+            <version>7.0.13.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <scope>provided</scope>
+            <version>3.1.0.GA</version>
+        </dependency>
+        <dependency>
+            <groupId>com.seeburger.as</groupId>
+            <artifactId>jboss-as-web</artifactId>
+            <scope>provided</scope>
+            <version>7.1.1.SEE55</version>
+        </dependency>
+		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-jsp</artifactId>
 			<scope>provided</scope>
 			<optional>true</optional>
-            <version>4.2.2</version>
-		</dependency>-->
+            <version>4.2.2.SEE1</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>*</artifactId>
+                    <groupId>*</groupId>
+                </exclusion>
+            </exclusions>
+		</dependency>
 
 		<!-- pax-url -->
 		<dependency>
@@ -397,12 +422,6 @@
 			<artifactId>pax-web-runtime</artifactId>
 			<scope>test</scope>
             <version>4.2.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.ops4j.pax.web</groupId>
-                    <artifactId>pax-web-jsp</artifactId>
-                </exclusion>
-            </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
@@ -510,17 +529,6 @@
 			<version>1.0.6</version>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>org.jboss.web</groupId>
-            <artifactId>jbossweb</artifactId>
-            <scope>provided</scope>
-            <version>7.0.13.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-            <version>3.1.0.GA</version>
-        </dependency>
 
 	</dependencies>
 

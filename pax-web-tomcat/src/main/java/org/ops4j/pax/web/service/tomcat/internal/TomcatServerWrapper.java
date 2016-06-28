@@ -70,6 +70,8 @@ import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.realm.RealmBase;
 import org.apache.catalina.security.SecurityUtil;
+import org.apache.jasper.util.ExceptionUtils;
+import org.jboss.as.web.deployment.WebCtxLoader;
 import org.ops4j.lang.NullArgumentException;
 import org.ops4j.pax.swissbox.core.BundleUtils;
 import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils;
@@ -87,6 +89,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,7 +206,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 				// said so, so do not call unavailable(null).
 				throw f;
 			} catch (Throwable f) {
-//				ExceptionUtils.handleThrowable(f);
+				ExceptionUtils.handleThrowable(f);
 				getServletContext().log("StandardWrapper.Throwable", f);
 				instanceSupport.fireInstanceEvent(
 						InstanceEvent.AFTER_INIT_EVENT, servlet, f);
@@ -915,7 +918,7 @@ public class TomcatServerWrapper implements ServerWrapper {
             @Override
             protected String getName()
             {
-                return "kool realm v1.0";
+                return "kool realm v1.0"; //FIXME
             }
         });
 
@@ -984,9 +987,12 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 //        ctx.setWebappVersion(name);
         ctx.setName(name);
+        ctx.setVersion("3.0");
         ctx.setPath("/" + contextName);
         ctx.setDocBase(basedir);
         final BundleContext bundleContext = (BundleContext)contextAttributes.get(WebContainerConstants.BUNDLE_CONTEXT_ATTRIBUTE);
+        BundleWiring wiring = bundleContext.getBundle().adapt(BundleWiring.class);
+        ctx.setLoader(new WebCtxLoader(wiring.getClassLoader()));
         ctx.addLifecycleListener(new LifecycleListener()
         {
             @Override
@@ -1032,7 +1038,7 @@ public class TomcatServerWrapper implements ServerWrapper {
         // configurationWorkerName //TODO: missing
 
         // new OSGi methods
-        ((HttpServiceContext)ctx).setHttpContext(httpContext);
+        ctx.setHttpContext(httpContext);
         // TODO: what about the AccessControlContext?
         // TODO: the virtual host section below
         // TODO: what about the VirtualHosts?
@@ -1047,27 +1053,27 @@ public class TomcatServerWrapper implements ServerWrapper {
         }
 
         // Add default JSP ContainerInitializer
-//        if (isJspAvailable())
-//        { // use JasperClassloader
-//            try
-//            {
-//                @SuppressWarnings("unchecked")
-//                Class<ServletContainerInitializer> loadClass = (Class<ServletContainerInitializer>)getClass().getClassLoader().loadClass("org.ops4j.pax.web.jsp.JasperInitializer");
-//                ctx.addServletContainerInitializer(loadClass.newInstance(), null);
-//            }
-//            catch (ClassNotFoundException e)
-//            {
-//                LOG.error("Unable to load JasperInitializer", e);
-//            }
-//            catch (InstantiationException e)
-//            {
-//                LOG.error("Unable to instantiate JasperInitializer", e);
-//            }
-//            catch (IllegalAccessException e)
-//            {
-//                LOG.error("Unable to instantiate JasperInitializer", e);
-//            }
-//        }
+        if (isJspAvailable())
+        { // use JasperClassloader
+            try
+            {
+                @SuppressWarnings("unchecked")
+                Class<ServletContainerInitializer> loadClass = (Class<ServletContainerInitializer>)getClass().getClassLoader().loadClass("org.ops4j.pax.web.jsp.JasperInitializer");
+                ctx.addServletContainerInitializer(loadClass.newInstance());
+            }
+            catch (ClassNotFoundException e)
+            {
+                LOG.error("Unable to load JasperInitializer", e);
+            }
+            catch (InstantiationException e)
+            {
+                LOG.error("Unable to instantiate JasperInitializer", e);
+            }
+            catch (IllegalAccessException e)
+            {
+                LOG.error("Unable to instantiate JasperInitializer", e);
+            }
+        }
 
 //        if (host == null)
 //        {
@@ -1100,6 +1106,14 @@ public class TomcatServerWrapper implements ServerWrapper {
         // // e.printStackTrace();
         // }
         return ctx;
+    }
+
+    private boolean isJspAvailable() {
+        try {
+            return (org.ops4j.pax.web.jsp.JspServletWrapper.class != null);
+        } catch (NoClassDefFoundError ignore) {
+            return false;
+        }
     }
 
     public String generateContextName(String contextName,

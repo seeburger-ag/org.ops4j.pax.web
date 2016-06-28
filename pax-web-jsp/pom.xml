@@ -12,6 +12,7 @@
 	<groupId>org.ops4j.pax.web</groupId>
 	<artifactId>pax-web-jsp</artifactId>
 	<packaging>bundle</packaging>
+    <version>4.2.2.SEE1</version>
 
 	<name>OPS4J Pax Web - Jsp Support</name>
 	<description>
@@ -42,7 +43,7 @@
 				</excludes>
 			</resource>
 		</resources>
-		
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
@@ -52,7 +53,7 @@
 						<Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
 						<Import-Package>
-							org.ops4j.pax.web.service.spi.util; version="${project.version}",
+							org.ops4j.pax.web.service.spi.util; version="4.2.2",
 							${bundle.namespace}; version="${project.version}",
 							javax.servlet; version="[2.3.0,4.0.0)",
 							javax.servlet.http; version="[2.3.0,4.0.0)",
@@ -86,13 +87,13 @@
 							javax.servlet.jsp.jstl.sql; version="1.2.1",
 							javax.servlet.jsp.jstl.tlv; version="1.2.1",
 							javax.servlet.jsp.resources; version="2.2",
-							org.apache.tomcat;resolution:=optional; -split-package:="merge-last",
+							<!-- org.apache.tomcat;resolution:=optional; -split-package:="merge-last",
 							org.apache.tomcat.util; resolution:=optional; -split-package:="merge-last",
 							org.apache.tomcat.util.scan; resolution:=optional; -split-package:="merge-last",
 							org.apache.tomcat.util.res; resolution:=optional; -split-package:="merge-last",
 							org.apache.tomcat.util.file; resolution:=optional; -split-package:="merge-last",
 							org.apache.tomcat.util.digester;resolution:=optional; -split-package:="merge-last",
-							org.apache.tomcat.util.descriptor.tld;resolution:=optional; -split-package:="merge-last",
+							org.apache.tomcat.util.descriptor.tld;resolution:=optional; -split-package:="merge-last", -->
 							org.apache.catalina.loader;resolution:=optional,
 							org.apache.juli.logging,
 							!org.eclipse.jdt.core.index,
@@ -271,11 +272,13 @@
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-api</artifactId>
 			<scope>provided</scope>
+            <version>4.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-spi</artifactId>
 			<scope>provided</scope>
+            <version>4.2.2</version>
 		</dependency>
 
 		<!-- Embeded dependencies (not transitive) -->
