@@ -1077,9 +1077,11 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 //        if (host == null)
 //        {
-//            server.setStartChildren(false);
-            ctx.setParent(server);
+            boolean startChildren = ((ContainerBase)server).getStartChildren();
+            ((ContainerBase)server).setStartChildren(false);
+//            ctx.setParent(server);
             server.addChild(ctx);
+            ((ContainerBase)server).setStartChildren(startChildren);
 //        }
 //        else
 //        {
