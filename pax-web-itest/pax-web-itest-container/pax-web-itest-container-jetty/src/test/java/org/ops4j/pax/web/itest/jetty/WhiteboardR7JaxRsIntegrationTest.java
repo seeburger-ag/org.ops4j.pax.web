@@ -15,47 +15,47 @@
  */
 package org.ops4j.pax.web.itest.jetty;
 
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.ops4j.pax.exam.OptionUtils.combine;
-
-
-import javax.inject.Inject;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.util.Filter;
 import org.ops4j.pax.web.itest.base.client.HttpTestClientFactory;
-import org.ops4j.pax.web.service.WebContainer;
-import org.osgi.framework.BundleContext;
 
 @RunWith(PaxExam.class)
 public class WhiteboardR7JaxRsIntegrationTest extends ITestBase {
 
-	@Inject
-	@Filter(timeout = 20000)
-	private WebContainer webcontainer;
+    @Configuration
+    public static Option[] configure() {
+        return combine(configureJetty(),
+                // aries-jax-rs-whiteboard not yet released
+                repository("http://repository.apache.org/content/groups/snapshots/")
+                        .id("aries-snapshots")
+                        .allowSnapshots()
+                        .disableReleases(),
+                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("DEBUG"),
+                // Deps
+                mavenBundle().groupId("javax.json").artifactId("javax.json-api").version("1.0"),
+                mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").version("2.0.1"),
+                mavenBundle().groupId("org.apache.ws.xmlschema").artifactId("xmlschema-core").version("2.2.1"),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm").versionAsInProject(),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.8.14"),
+                // Runtime
+                mavenBundle().groupId("org.apache.aries.jax.rs").artifactId("org.apache.aries.jax.rs.api").version("0.0.1-SNAPSHOT"),
+                mavenBundle().groupId("org.apache.aries.jax.rs").artifactId("org.apache.aries.jax.rs.whiteboard").version("0.0.1-SNAPSHOT"),
+                // Sample
+                mavenBundle().groupId("org.ops4j.pax.web.samples").artifactId("whiteboard-ds-jaxrs").version("6.1.0-SNAPSHOT")
+        );
+    }
 
-	@Inject
-	private BundleContext bundleContext;
-
-	@Configuration
-	public static Option[] configure() {
-		return combine(configureJetty(),
-				mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").version("2.0.1"),
-				mavenBundle().groupId("org.apache.aries.jax.rs").artifactId("org.apache.aries.jax.rs.api").version("0.0.1-SNAPSHOT"),
-				mavenBundle().groupId("org.apache.aries.jax.rs").artifactId("org.apache.aries.jax.rs.whiteboard").version("0.0.1-SNAPSHOT"),
-				mavenBundle().groupId("org.ops4j.pax.web.samples").artifactId("whiteboard-ds-jaxrs").version("6.1.0-SNAPSHOT")
-				);
-	}
-
-	@Test
-	public void testWhiteboardJaxRsApplication() throws Exception {
-		HttpTestClientFactory.createDefaultTestClient()
-				.withResponseAssertion("Response must contain 'Hello from JAXRS'",
-						resp -> resp.contains("Hello from JAXRS"))
-				.doGETandExecuteTest("http://127.0.0.1:8181/jaxrs-application");
-	}
+    @Test
+    public void testWhiteboardJaxRsApplication() throws Exception {
+        HttpTestClientFactory.createDefaultTestClient()
+                .withResponseAssertion("Response must contain 'Hello from JAXRS'",
+                        resp -> resp.contains("Hello from JAXRS"))
+                .doGETandExecuteTest("http://127.0.0.1:8181/context/jaxrs-application");
+    }
 }
