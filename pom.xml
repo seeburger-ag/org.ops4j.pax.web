@@ -26,12 +26,19 @@
 		<url>https://ops4j1.jira.com/projects/PAXWEB</url>
 	</issueManagement>
 
-	<scm>
-		<connection>scm:git:git@github.com:ops4j/org.ops4j.pax.web.git</connection>
-		<developerConnection>scm:git:git@github.com:ops4j/org.ops4j.pax.web.git</developerConnection>
-		<url>http://github.com/ops4j/org.ops4j.pax.web/tree/master</url>
-		<tag>web-4.2.2</tag>
-	</scm>
+    <scm>
+        <connection>scm:git:git@github.com:seeburger-ag/org.ops4j.pax.web.git</connection>
+        <developerConnection>scm:git:git@github.com:seeburger-ag/org.ops4j.pax.web.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>${release.repository.id}</id>
+            <name>ops4j Release Distribution Repository</name>
+            <url>${release.repository.url}</url>
+        </repository>
+    </distributionManagement>
 
 	<developers>
 		<developer>
@@ -874,7 +881,7 @@
 		<module>pax-web-features</module>
 		<module>pax-web-archetypes</module>
 		<module>samples</module>
-		<module>pax-web-itest</module>
+		<!-- <module>pax-web-itest</module> -->
 		<module>pax-web-manual</module>
 	</modules>
 
