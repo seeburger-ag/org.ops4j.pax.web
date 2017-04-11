@@ -101,7 +101,7 @@
 			<artifactId>pax-web-itest-container-jetty</artifactId>
 			<classifier>test-sources</classifier>
       		<scope>provided</scope>
-      		<version>${project.version}</version>
+      		<version>4.2.2</version>
 		</dependency>
 	</dependencies>
 </project>
