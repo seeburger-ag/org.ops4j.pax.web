@@ -22,6 +22,66 @@
     features:install mvn:org.ops4j.pax.web/features/${project.version}/xml/features
   </description>
 
+    <profiles>
+        <profile>
+            <id>non-release</id>
+            <activation>
+                <property>
+                    <name>!env.IS_M2RELEASEBUILD</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+			<plugin>
+				<groupId>org.apache.karaf.tooling</groupId>
+				<artifactId>karaf-maven-plugin</artifactId>
+				<version>${dependency.karaf.version}</version>
+				<executions>
+					<execution>
+						<id>verify</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>mvn:org.apache.karaf.features/framework/${dependency.karaf.version}/xml/features</descriptor>
+								<descriptor>mvn:org.apache.karaf.features/standard/${dependency.karaf.version}/xml/features</descriptor>
+								<descriptor>file:${project.build.directory}/classes/features.xml</descriptor>
+							</descriptors>
+							<distribution>org.apache.karaf.features:framework</distribution>
+							<javase>1.7</javase>
+							<framework>
+								<feature>framework</feature>
+							</framework>
+							<features>
+								<!-- We can't use pax-* as we need to disable pax-jsf-support
+								<feature>pax-*</feature>
+								-->
+								<feature>pax-http</feature>
+								<feature>pax-http-whiteboard</feature>
+								<feature>pax-war</feature>
+								<feature>pax-jetty</feature>
+								<feature>pax-jetty-spdy</feature>
+								<feature>pax-http-jetty</feature>
+								<!-- pax-cdi does not validate correctly
+								<feature>pax-jsf-support</feature>
+								-->
+								<feature>pax-tomcat</feature>
+								<feature>pax-http-tomcat</feature>
+								<feature>pax-war-tomcat</feature>
+							</features>
+							<verifyTransitive>false</verifyTransitive>
+							<ignoreMissingConditions>true</ignoreMissingConditions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 	<properties>
         <geronimo.jta-spec.version>1.1.1</geronimo.jta-spec.version>
 <!--         <geronimo.annotation-spec.version>1.0.1</geronimo.annotation-spec.version> -->
@@ -91,51 +151,6 @@
 						<goals>
 							<goal>resources</goal>
 						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.karaf.tooling</groupId>
-				<artifactId>karaf-maven-plugin</artifactId>
-				<version>${dependency.karaf.version}</version>
-				<executions>
-					<execution>
-						<id>verify</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>verify</goal>
-						</goals>
-						<configuration>
-							<descriptors>
-								<descriptor>mvn:org.apache.karaf.features/framework/${dependency.karaf.version}/xml/features</descriptor>
-								<descriptor>mvn:org.apache.karaf.features/standard/${dependency.karaf.version}/xml/features</descriptor>
-								<descriptor>file:${project.build.directory}/classes/features.xml</descriptor>
-							</descriptors>
-							<distribution>org.apache.karaf.features:framework</distribution>
-							<javase>1.7</javase>
-							<framework>
-								<feature>framework</feature>
-							</framework>
-							<features>
-								<!-- We can't use pax-* as we need to disable pax-jsf-support
-								<feature>pax-*</feature>
-								-->
-								<feature>pax-http</feature>
-								<feature>pax-http-whiteboard</feature>
-								<feature>pax-war</feature>
-								<feature>pax-jetty</feature>
-								<feature>pax-jetty-spdy</feature>
-								<feature>pax-http-jetty</feature>
-								<!-- pax-cdi does not validate correctly
-								<feature>pax-jsf-support</feature>
-								-->
-								<feature>pax-tomcat</feature>
-								<feature>pax-http-tomcat</feature>
-								<feature>pax-war-tomcat</feature>
-							</features>
-							<verifyTransitive>false</verifyTransitive>
-							<ignoreMissingConditions>true</ignoreMissingConditions>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
