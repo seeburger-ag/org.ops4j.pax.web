@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>pax-web-itest</artifactId>
 		<groupId>org.ops4j.pax.web</groupId>
-		<version>4.2.2</version>
+		<version>4.2.2.SEE1-SNAPSHOT</version>
 	</parent>
 	<groupId>org.ops4j.pax.web.itest</groupId>
 	<artifactId>pax-web-itest-container</artifactId>
@@ -18,7 +18,7 @@
 		<profile>
 			<id>jetty</id>
 			<activation>
-				<activeByDefault>true</activeByDefault>
+				<activeByDefault>false</activeByDefault>
 			</activation>
 			<modules>
 				<module>pax-web-itest-container-jetty</module>
@@ -27,7 +27,7 @@
 		<profile>
 			<id>tomcat</id>
 			<activation>
-				<activeByDefault>true</activeByDefault>
+				<activeByDefault>false</activeByDefault>
 			</activation>
 			<modules>
 				<module>pax-web-itest-container-tomcat</module>
