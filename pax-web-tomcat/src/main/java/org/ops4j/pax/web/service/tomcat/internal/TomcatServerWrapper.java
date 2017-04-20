@@ -277,7 +277,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void addServlet(final ServletModel model) {
-		LOG.debug("add servlet [{}]", model);
+		LOG.info("add servlet [{}]", model);
 		final HttpServiceContext context = findOrCreateContext(model.getContextModel());
 		final String servletName = model.getName();
 		if (model.getServlet() == null) {
@@ -417,7 +417,10 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void removeServlet(final ServletModel model) {
-		LOG.debug("remove servlet [{}]", model);
+		LOG.info("remove servlet is disabled for jboss-web [{}]", model);
+        //with jboss-web we do not allow removing already registered wabs
+        return;
+        /*
 		final Context context = findContext(model);
 		if (context == null) {
 			throw new TomcatRemoveServletException(
@@ -429,13 +432,15 @@ public class TomcatServerWrapper implements ServerWrapper {
 			throw new TomcatRemoveServletException(
 					"cannot find the servlet to remove: " + model);
 		}
-		context.removeChild(servlet);
+		context.removeChild(servlet);*/
 	}
 
 	@Override
 	public void removeContext(final HttpContext httpContext) {
-		LOG.debug("remove context [{}]", httpContext);
-
+		LOG.info("remove context is disabled for jboss-web [{}]", httpContext);
+		//with jboss-web we do not allow removing context during runtime.
+		return;
+/*
 		try {
 			if (servletContextService != null) {
 				servletContextService.unregister();
@@ -466,7 +471,7 @@ public class TomcatServerWrapper implements ServerWrapper {
         {
             throw new RemoveContextException("cannot destroy the context: "
                             + httpContext, e);
-        }
+        }*/
 	}
 
 	@Override
@@ -691,6 +696,9 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void removeFilter(final FilterModel filterModel) {
+        //with jboss-web we do not allow removing already registered wabs
+        return;
+        /*
 		final Context context = findOrCreateContext(filterModel);
 		FilterDef findFilterDef = context.findFilterDef(filterModel.getName());
 		context.removeFilterDef(findFilterDef);
@@ -700,7 +708,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 					filterModel.getName())) {
 				context.removeFilterMap(filterMap);
 			}
-		}
+		}*/
 	}
 
 	@Override
@@ -742,13 +750,16 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void removeErrorPage(final ErrorPageModel model) {
-		final Context context = findContext(model);
+        //with jboss-web we do not allow removing already registered wabs
+        return;
+        /*
+	    final Context context = findContext(model);
 		if (context == null) {
 			throw new RemoveErrorPageException(
 					"cannot retrieve the associated context: " + model);
 		}
 		final ErrorPage errorPage = createErrorPage(model);
-		context.removeErrorPage(errorPage);
+		context.removeErrorPage(errorPage);*/
 	}
 
 	@Override
@@ -964,8 +975,10 @@ public class TomcatServerWrapper implements ServerWrapper {
 			if (webContextPath == null) {
 				LOG.warn("osgi.web.contextpath couldn't be set, it's not configured");
 			}
-
-			properties.put("osgi.web.contextpath", webContextPath);
+			else {
+			    //fix NullPointerException
+			    properties.put("osgi.web.contextpath", webContextPath);
+			}
 
 			servletContextService = bundleContext.registerService(
 					ServletContext.class, servletContext, properties);
@@ -978,9 +991,15 @@ public class TomcatServerWrapper implements ServerWrapper {
 	}
 
 
-    public HttpServiceContext addContext(final Map<String, String> contextParams, final Map<String, Object> contextAttributes, String contextName, HttpContext httpContext, AccessControlContext accessControllerContext, Map<ServletContainerInitializer, Set<Class< ? >>> containerInitializers, URL jettyWebXmlURL, List<String> virtualHosts, List<String> connectors, String basedir)
+    public HttpServiceContext addContext(final Map<String, String> contextParams, final Map<String, Object> contextAttributes, String contextNameArg, HttpContext httpContext, AccessControlContext accessControllerContext, Map<ServletContainerInitializer, Set<Class< ? >>> containerInitializers, URL jettyWebXmlURL, List<String> virtualHosts, List<String> connectors, String basedir)
     {
 //        silence(host, "/" + contextName);
+        String contextName = contextNameArg;
+        if(contextName==null || contextName.isEmpty())
+        {
+            //do not allow root context. Map it on another context
+            contextName="root";
+        }
         HttpServiceContext ctx = new HttpServiceContext(server, accessControllerContext);
         String name = generateContextName(contextName, httpContext);
         LOG.info("registering context {}, with context-name: {}", httpContext, name);
@@ -1121,12 +1140,13 @@ public class TomcatServerWrapper implements ServerWrapper {
     public String generateContextName(String contextName,
                                       HttpContext httpContext) {
                                   String name;
-                                  if (contextName != null) {
+                                  /*if (contextName != null) {
                                       name = "[" + contextName + "]-" + httpContext.getClass().getName();
                                   } else {
                                       name = "[]-" + httpContext.getClass().getName();
-                                  }
-                                  return name;
+                                  }*/
+                                  //name it like jboss-web name it
+                                  return "/"+contextName;
                               }
 
 
@@ -1135,12 +1155,19 @@ public class TomcatServerWrapper implements ServerWrapper {
 	}
 
     public Context findContext(ContextModel contextModel) {
-        String name = generateContextName(contextModel.getContextName(),
+        String contextName = contextModel.getContextName();
+        if(contextName==null || contextName.isEmpty())
+        {
+            //do not allow root context. Map it on another context
+            contextName="root";
+        }
+        String name = generateContextName(contextName,
                 contextModel.getHttpContext());
         return findContext(name);
     }
 
     Context findContext(String contextName) {
+        LOG.info("find context with context-name: {}", contextName);
         return (Context) findContainer(contextName);
     }
 
@@ -1183,11 +1210,14 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void removeWelcomeFiles(WelcomeFileModel model) {
+        //with jboss-web we do not allow removing already registered wabs
+        return;
+        /*
 		final Context context = findOrCreateContext(model.getContextModel());
 
 		for (String welcomeFile : model.getWelcomeFiles()) {
 			context.removeWelcomeFile(welcomeFile);
-		}
+		}*/
 	}
 
     @Override
