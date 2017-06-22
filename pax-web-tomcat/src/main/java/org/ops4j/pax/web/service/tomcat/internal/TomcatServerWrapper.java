@@ -417,31 +417,35 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void removeServlet(final ServletModel model) {
-		LOG.info("remove servlet is disabled for jboss-web [{}]", model);
-        //with jboss-web we do not allow removing already registered wabs
-        return;
-        /*
 		final Context context = findContext(model);
 		if (context == null) {
 			throw new TomcatRemoveServletException(
 					"cannot remove servlet cannot find the associated container: "
 							+ model);
 		}
+		if(context.getName()!=null && context.getName().equals("/"))
+		{
+		    LOG.info("remove servlet from root context is disabled for jboss-web [{}]", model);
+		    return;
+		}
 		final Container servlet = context.findChild(model.getName());
 		if (servlet == null) {
 			throw new TomcatRemoveServletException(
 					"cannot find the servlet to remove: " + model);
 		}
-		context.removeChild(servlet);*/
+		context.removeChild(servlet);
 	}
 
 	@Override
 	public void removeContext(final HttpContext httpContext) {
-		LOG.info("remove context is disabled for jboss-web [{}]", httpContext);
-		//with jboss-web we do not allow removing context during runtime.
-		return;
-/*
-		try {
+
+	    final HttpServiceContext ctext = contextMap.get(httpContext);
+	    if(ctext!=null && ctext.getName().equals("/"))
+	    {
+	        LOG.info("removing root context is disabled for jboss-web [{}]", httpContext);
+	        return;
+	    }
+	    try {
 			if (servletContextService != null) {
 				servletContextService.unregister();
 			}
@@ -471,7 +475,7 @@ public class TomcatServerWrapper implements ServerWrapper {
         {
             throw new RemoveContextException("cannot destroy the context: "
                             + httpContext, e);
-        }*/
+        }
 	}
 
 	@Override
@@ -696,10 +700,12 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void removeFilter(final FilterModel filterModel) {
-        //with jboss-web we do not allow removing already registered wabs
-        return;
-        /*
 		final Context context = findOrCreateContext(filterModel);
+		if(context.getName()!=null && context.getName().equals("/"))
+		{
+	        LOG.info("removing filter from root context is disabled for jboss-web [{}]", context.getName());
+	        return;
+		}
 		FilterDef findFilterDef = context.findFilterDef(filterModel.getName());
 		context.removeFilterDef(findFilterDef);
 		FilterMap[] filterMaps = context.findFilterMaps();
@@ -708,7 +714,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 					filterModel.getName())) {
 				context.removeFilterMap(filterMap);
 			}
-		}*/
+		}
 	}
 
 	@Override
@@ -1210,14 +1216,17 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 	@Override
 	public void removeWelcomeFiles(WelcomeFileModel model) {
-        //with jboss-web we do not allow removing already registered wabs
-        return;
-        /*
+
 		final Context context = findOrCreateContext(model.getContextModel());
+		if(context.getName()!=null && context.getName().equals("/"))
+		{
+            LOG.info("removing welcome files from root context is disabled for jboss-web [{}]", context.getName());
+            return;
+		}
 
 		for (String welcomeFile : model.getWelcomeFiles()) {
 			context.removeWelcomeFile(welcomeFile);
-		}*/
+		}
 	}
 
     @Override
