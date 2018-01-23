@@ -477,4 +477,21 @@ public class HttpServiceProxy implements StoppableHttpService {
 		delegate.registerServlet(servletClass, urlPatterns, initParams, loadOnStartup, asyncSupported, multiPartConfig, httpContext);
 	}
 
+    @Override
+    public void setTrackingMode(String mode, HttpContext httpContext)
+    {
+        delegate.setTrackingMode(mode, httpContext);
+    }
+
+    @Override
+    public void setSessionCookie(String sessionCookieName,
+                                 Boolean sessionCookieHttpOnly,
+                                 String sessionDomain,
+                                 Boolean sessionCookieSecure,
+                                 String sessionPath,
+                                 HttpContext httpContext)
+    {
+        delegate.setSessionCookie(sessionCookieName, sessionCookieHttpOnly, sessionDomain, sessionCookieSecure, sessionPath, httpContext);
+    }
+
 }

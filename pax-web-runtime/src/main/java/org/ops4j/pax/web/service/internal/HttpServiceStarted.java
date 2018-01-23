@@ -1088,6 +1088,31 @@ class HttpServiceStarted implements StoppableHttpService {
 		serviceModel.addContextModel(contextModel);
 	}
 
+    @Override
+    public void setTrackingMode(String mode, HttpContext httpContext)
+    {
+        NullArgumentException.validateNotNull(httpContext, "Http context");
+        final ContextModel contextModel = getOrCreateContext(httpContext);
+        contextModel.setTrackingMode(mode);
+    }
+
+    @Override
+    public void setSessionCookie(String sessionCookieName,
+                                 Boolean sessionCookieHttpOnly,
+                                 String sessionDomain,
+                                 Boolean sessionCookieSecure,
+                                 String sessionPath,
+                                 HttpContext httpContext)
+    {
+        NullArgumentException.validateNotNull(httpContext, "Http context");
+        final ContextModel contextModel = getOrCreateContext(httpContext);
+        contextModel.setSessionCookie(sessionCookieName);
+        contextModel.setSessionCookieHttpOnly(sessionCookieHttpOnly);
+        contextModel.setSessionDomain(sessionDomain);
+        contextModel.setSessionCookieSecure(sessionCookieSecure);
+        contextModel.setSessionPath(sessionPath);
+    }
+
 	/*
 	@Override
 	public void setConnectors(List<String> connectors, HttpContext httpContext) {

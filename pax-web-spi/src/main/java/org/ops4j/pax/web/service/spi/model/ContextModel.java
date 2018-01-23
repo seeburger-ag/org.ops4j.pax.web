@@ -62,6 +62,10 @@ public class ContextModel extends Identity {
 	 */
 	private Integer sessionTimeout;
 	/**
+	 * Tracking mode 
+	 */
+	private String trackingMode;
+	/**
 	 * Session cookie name.
 	 */
 	private String sessionCookie;
@@ -387,7 +391,7 @@ public class ContextModel extends Identity {
 	 * @param sessionCookieSecure
 	 *            session cookie secure flag
 	 */
-	public void setSessionCookieSecre(final Boolean sessionCookieSecure) {
+	public void setSessionCookieSecure(final Boolean sessionCookieSecure) {
 		this.sessionCookieSecure = sessionCookieSecure;
 	}
 
@@ -408,6 +412,26 @@ public class ContextModel extends Identity {
 	 */
 	public void setSessionWorkerName(final String sessionWorkerName) {
 		this.sessionWorkerName = sessionWorkerName;
+	}
+
+	/**
+	 * Setter
+	 * 
+	 * @return tracking mode
+	 */
+	public String getTrackingMode()
+	{
+	    return trackingMode;
+	}
+
+	/**
+	 * Setter
+	 * 
+	 * @param mode
+	 */
+	public void setTrackingMode(String mode)
+	{
+	    this.trackingMode = mode;
 	}
 
 	/**

@@ -17,14 +17,13 @@
 package org.ops4j.pax.web.service.tomcat.internal;
 
 import java.io.File;
-import java.net.URL;
-import java.security.AccessControlContext;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.EnumSet;
 import java.util.EventListener;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +44,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRequestAttributeListener;
 import javax.servlet.ServletRequestListener;
+import javax.servlet.SessionTrackingMode;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
@@ -68,9 +68,10 @@ import org.apache.catalina.deploy.FilterMap;
 import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
+import org.apache.catalina.deploy.SessionCookie;
 import org.apache.catalina.realm.RealmBase;
 import org.apache.catalina.security.SecurityUtil;
-import org.apache.jasper.util.ExceptionUtils;
+import org.apache.tomcat.util.ExceptionUtils;
 import org.jboss.as.web.deployment.WebCtxLoader;
 import org.ops4j.lang.NullArgumentException;
 import org.ops4j.pax.swissbox.core.BundleUtils;
@@ -902,17 +903,9 @@ public class TomcatServerWrapper implements ServerWrapper {
 				.getBundleContext(bundle);
 
 		String basePath = System.getProperty("javax.servlet.context.tempdir",System.getProperty("java.io.tmpdir"));
-		final HttpServiceContext context = addContext(
-				contextModel.getContextParams(),
-				getContextAttributes(bundleContext),
-				contextModel.getContextName(), contextModel.getHttpContext(),
-				contextModel.getAccessControllerContext(),
-				contextModel.getContainerInitializers(),
-				contextModel.getJettyWebXmlURL(),
-				contextModel.getVirtualHosts(),
-				null /*contextModel.getConnectors() */,
-				new File(basePath).getAbsolutePath()
-				);
+		final HttpServiceContext context = addContext(contextModel,
+		                                              getContextAttributes(bundleContext),
+		                                              new File(basePath).getAbsolutePath());
 
 
         context.setRealm(new RealmBase()
@@ -997,16 +990,18 @@ public class TomcatServerWrapper implements ServerWrapper {
 	}
 
 
-    public HttpServiceContext addContext(final Map<String, String> contextParams, final Map<String, Object> contextAttributes, String contextNameArg, HttpContext httpContext, AccessControlContext accessControllerContext, Map<ServletContainerInitializer, Set<Class< ? >>> containerInitializers, URL jettyWebXmlURL, List<String> virtualHosts, List<String> connectors, String basedir)
+    public HttpServiceContext addContext(final ContextModel contextModel, final Map<String, Object> contextAttributes, String basedir)
     {
 //        silence(host, "/" + contextName);
-        String contextName = contextNameArg;
+        String contextName = contextModel.getContextName();
         if(contextName==null || contextName.isEmpty())
         {
             //do not allow root context. Map it on another context
             contextName="root";
         }
-        HttpServiceContext ctx = new HttpServiceContext(server, accessControllerContext);
+        HttpServiceContext ctx = new HttpServiceContext(server, contextModel.getAccessControllerContext());
+        final HttpContext httpContext = contextModel.getHttpContext();
+
         String name = generateContextName(contextName, httpContext);
         LOG.info("registering context {}, with context-name: {}", httpContext, name);
 
@@ -1015,6 +1010,8 @@ public class TomcatServerWrapper implements ServerWrapper {
         ctx.setVersion("3.0");
         ctx.setPath("/" + contextName);
         ctx.setDocBase(basedir);
+
+        final Map<String, String> contextParams = contextModel.getContextParams();
         final BundleContext bundleContext = (BundleContext)contextAttributes.get(WebContainerConstants.BUNDLE_CONTEXT_ATTRIBUTE);
         BundleWiring wiring = bundleContext.getBundle().adapt(BundleWiring.class);
         ctx.setLoader(new WebCtxLoader(wiring.getClassLoader()));
@@ -1054,12 +1051,41 @@ public class TomcatServerWrapper implements ServerWrapper {
             ctx.addParameter(e.getKey(), e.getValue());
         }
 
+        if(contextModel.getTrackingMode() != null)
+        {
+            Set<SessionTrackingMode> sessionTrackingModes = new HashSet<SessionTrackingMode>();
+            sessionTrackingModes.add(SessionTrackingMode.valueOf(contextModel.getTrackingMode()));
+            ctx.setSessionTrackingModes(sessionTrackingModes);
+        }
+
         // Add Session config
-//        ctx.setSessionCookieName(configurationSessionCookie);
-        // configurationSessionCookieHttpOnly
-//        ctx.setUseHttpOnly(configurationSessionCookieHttpOnly);
-        // configurationSessionTimeout
-//        ctx.setSessionTimeout(configurationSessionTimeout);
+        SessionCookie sessionCookie = ctx.getSessionCookie();
+        final String sessionDomain = contextModel.getSessionDomain();
+        if(sessionDomain==null || sessionDomain.isEmpty())
+        {
+            sessionCookie.setDomain(null);
+        }
+        else
+        {
+            sessionCookie.setDomain(sessionDomain);
+        }
+        sessionCookie.setHttpOnly(Boolean.TRUE.equals(contextModel.getSessionCookieHttpOnly()));
+        sessionCookie.setName(contextModel.getSessionCookie());
+        final String sessionPath = contextModel.getSessionPath();
+        if(sessionPath==null || sessionPath.isEmpty())
+        {
+            sessionCookie.setPath(null);
+        }
+        else
+        {
+            sessionCookie.setPath(sessionPath);
+        }
+        sessionCookie.setSecure(Boolean.TRUE.equals(contextModel.getSessionCookieSecure()));
+        ctx.setSessionCookie(sessionCookie);
+
+        final Integer sessionTimeout = contextModel.getSessionTimeout();
+        ctx.setSessionTimeout(sessionTimeout == null ? -1 : sessionTimeout);
+
         // configurationWorkerName //TODO: missing
 
         // new OSGi methods
@@ -1069,6 +1095,7 @@ public class TomcatServerWrapper implements ServerWrapper {
         // TODO: what about the VirtualHosts?
         // TODO: what about the tomcat-web.xml config?
         // TODO: connectors are needed for virtual host?
+        Map<ServletContainerInitializer, Set<Class< ? >>> containerInitializers = contextModel.getContainerInitializers();
         if (containerInitializers != null)
         {
             for (Entry<ServletContainerInitializer, Set<Class< ? >>> entry : containerInitializers.entrySet())

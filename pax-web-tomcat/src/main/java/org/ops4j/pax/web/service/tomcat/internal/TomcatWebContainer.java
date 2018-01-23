@@ -468,6 +468,25 @@ public class TomcatWebContainer implements WebContainer
 
         return context;
     }
+
+    @Override
+    public void setTrackingMode(String mode, HttpContext httpContext)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void setSessionCookie(String sessionCookieName,
+                                 Boolean sessionCookieHttpOnly,
+                                 String sessionDomain,
+                                 Boolean sessionCookieSecure,
+                                 String sessionPath,
+                                 HttpContext httpContext)
+    {
+        // TODO Auto-generated method stub
+        
+    }
 }
 
 

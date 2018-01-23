@@ -158,6 +158,9 @@ public class WebApp {
 
 	private boolean hasDependencies;
 	
+    private WebAppCookieConfig sessionCookieConfig;	
+    
+    private String trackingMode;
 	/**
 	 * Creates a new web app.
 	 */
@@ -258,6 +261,25 @@ public class WebApp {
 	public String getSessionTimeout() {
 		return sessionTimeout;
 	}
+
+    /**
+     * Setter.
+     * 
+     * @param mode
+     *            tracking mode
+     */
+    public void setTrackingMode(final String mode) {
+        trackingMode = mode;
+    }
+
+    /**
+     * Getter.
+     * 
+     * @return tracking mode
+     */
+    public String getTrackingMode() {
+        return trackingMode;
+    }
 
 	/**
 	 * Getter.
@@ -816,5 +838,13 @@ public class WebApp {
 	public void setWebFragments(List<URL> webFragments) {
 		this.webFragments = webFragments;
 	}
+	
+    public void setSessionCookieConfig(WebAppCookieConfig sessionCookieConfig) {
+        this.sessionCookieConfig = sessionCookieConfig;
+    }	
 
+    public WebAppCookieConfig getSessionCookieConfig()
+    {
+        return this.sessionCookieConfig;
+    }
 }

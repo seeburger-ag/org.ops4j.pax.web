@@ -436,6 +436,51 @@ public interface WebContainer extends HttpService {
 	 */
 	void setSessionTimeout(Integer minutes, HttpContext httpContext);
 
+    /**
+     * Sets the tracking mode of the servlet context corresponding to
+     * specified http context. This method must be used before any register
+     * method that uses the specified http context, otherwise an
+     * IllegalStateException will be thrown.
+     * 
+     * @param mode
+     *            tracking mode of the servlet context corresponding to
+     *            specified http context
+     * @param httpContext
+     *            http context. Cannot be null.
+     * 
+     * @throws IllegalArgumentException
+     *             if http context is null
+     * @throws IllegalStateException
+     *             if the call is made after the http context was already used
+     *             into a registration
+     */
+	void setTrackingMode(String mode, HttpContext httpContext);
+	
+
+	/**
+     * Sets the session cookie parameters of the servlet context corresponding to
+     * specified http context. This method must be used before any register
+     * method that uses the specified http context, otherwise an
+     * IllegalStateException will be thrown.
+     * 
+	 * @param sessionCookieName
+	 * @param sessionCookieHttpOnly
+	 * @param sessionDomain
+	 * @param sessionCookieSecure
+	 * @param sessionPath
+	 * @param httpContext
+	 *           http context. Cannot be null.
+     * @throws IllegalArgumentException
+     *             if http context is null
+     * @throws IllegalStateException
+     *             if the call is made after the http context was already used
+     *             into a registration
+	 */
+	void setSessionCookie(String sessionCookieName, Boolean sessionCookieHttpOnly,
+	                      String sessionDomain, Boolean sessionCookieSecure,
+	                      String sessionPath, HttpContext httpContext);
+	
+	
 	/**
 	 * Enable jsp support.
 	 * 

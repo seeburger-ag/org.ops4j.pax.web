@@ -32,6 +32,7 @@ import org.ops4j.lang.NullArgumentException;
 import org.ops4j.pax.swissbox.core.BundleClassLoader;
 import org.ops4j.pax.web.extender.war.internal.model.WebApp;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppConstraintMapping;
+import org.ops4j.pax.web.extender.war.internal.model.WebAppCookieConfig;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppErrorPage;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppFilter;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppJspServlet;
@@ -170,6 +171,17 @@ class RegisterWebAppVisitorWC implements WebAppVisitor {
 		if (webApp.getJettyWebXmlURL() != null) {
 			webContainer.registerJettyWebXml(webApp.getJettyWebXmlURL(),
 					httpContext);
+		}
+		
+		if(webApp.getTrackingMode() != null)
+		{
+		    webContainer.setTrackingMode(webApp.getTrackingMode(), httpContext);
+		}
+
+		if(webApp.getSessionCookieConfig()!=null)
+		{
+		    WebAppCookieConfig cookieConfig = webApp.getSessionCookieConfig();
+		    webContainer.setSessionCookie(cookieConfig.getName(), cookieConfig.getHttpOnly(), cookieConfig.getDomain(), cookieConfig.getSecure(), cookieConfig.getPath(), httpContext);
 		}
 
 		LOG.debug("webcontainer begin!");

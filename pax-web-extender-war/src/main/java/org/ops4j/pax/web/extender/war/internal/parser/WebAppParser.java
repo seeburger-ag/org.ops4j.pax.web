@@ -46,6 +46,7 @@ import javax.servlet.annotation.WebServlet;
 import org.apache.xbean.finder.BundleAnnotationFinder;
 import org.ops4j.pax.web.extender.war.internal.model.WebApp;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppConstraintMapping;
+import org.ops4j.pax.web.extender.war.internal.model.WebAppCookieConfig;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppErrorPage;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppFilter;
 import org.ops4j.pax.web.extender.war.internal.model.WebAppFilterMapping;
@@ -555,8 +556,67 @@ public class WebAppParser {
 			if (stElement != null) {
 				webApp.setSessionTimeout(getTextContent(stElement));
 			}
+            final Element tmElement = getChild(scElement, "tracking-mode"); // Fix
+            // for PAXWEB-201
+            if (tmElement != null) {
+                webApp.setTrackingMode(getTextContent(tmElement));
+            }			
+			final Element cc = getChild(scElement,"cookie-config");
+			if(cc!=null)
+			{
+			    parseCookieConfig(cc, webApp);
+			}
 		}
 	}
+	
+    /**
+     * Parses cookie config out of web.xml.
+     * 
+     * @param rootElement
+     *            web.xml cookie-config element
+     * @param webApp
+     *            web app for web.xml
+     */
+    private static void parseCookieConfig(final Element cookieConfigElement,
+            final WebApp webApp) {
+        if (cookieConfigElement != null) {
+            WebAppCookieConfig cookieConfig = new WebAppCookieConfig();
+            final Element nElement = getChild(cookieConfigElement, "name");
+            if (nElement != null) {
+                cookieConfig.setName(getTextContent(nElement));
+            }
+            final Element dElement = getChild(cookieConfigElement, "domain");
+            if (dElement != null) {
+                cookieConfig.setDomain(getTextContent(dElement));
+            }
+            final Element pElement = getChild(cookieConfigElement, "path");
+            if (pElement != null) {
+                cookieConfig.setPath(getTextContent(pElement));
+            }
+            final Element hElement = getChild(cookieConfigElement, "http-only");
+            if (hElement != null) {
+                if(getTextContent(hElement)!=null)
+                {
+                    cookieConfig.setHttpOnly(new Boolean(getTextContent(hElement)));
+                }
+            }
+            final Element mElement = getChild(cookieConfigElement, "max-age");
+            if (mElement != null) {
+                if(getTextContent(mElement)!=null)
+                {
+                    cookieConfig.setMaxAge(new Integer(getTextContent(mElement)));
+                }
+            }
+            final Element sElement = getChild(cookieConfigElement, "secure");
+            if (sElement != null) {
+                if(getTextContent(sElement)!=null)
+                {
+                    cookieConfig.setSecure(new Boolean(getTextContent(sElement)));
+                }
+            }
+            webApp.setSessionCookieConfig(cookieConfig);
+        }
+    }
 
 	/**
 	 * Parses servlets and servlet mappings out of web.xml.
@@ -919,5 +979,4 @@ public class WebAppParser {
 		match = path.matches("web-jetty\\.xml");
 		return match;
 	}
-
 }

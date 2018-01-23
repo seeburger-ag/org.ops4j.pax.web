@@ -444,4 +444,21 @@ class HttpServiceStopped implements StoppableHttpService {
 		this.registerServlet(servletClass, urlPatterns, initParams, httpContext);
 	}
 
+    @Override
+    public void setTrackingMode(String mode, HttpContext httpContext)
+    {
+        LOG.warn("Http service has already been stopped");
+    }
+
+    @Override
+    public void setSessionCookie(String sessionCookieName,
+                                 Boolean sessionCookieHttpOnly,
+                                 String sessionDomain,
+                                 Boolean sessionCookieSecure,
+                                 String sessionPath,
+                                 HttpContext httpContext)
+    {
+        LOG.warn("Http service has already been stopped");
+    }
+
 }
