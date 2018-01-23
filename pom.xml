@@ -6,7 +6,7 @@
 
 	<groupId>org.ops4j.pax</groupId>
 	<artifactId>web</artifactId>
-	<version>4.2.2.SEE14-SNAPSHOT</version>
+	<version>4.2.2.SEE14</version>
 	<packaging>pom</packaging>
 
 	<name>OPS4J Pax Web</name>
@@ -46,7 +46,7 @@
     <scm>
         <connection>scm:git:git@github.com:seeburger-ag/org.ops4j.pax.web.git</connection>
         <developerConnection>scm:git:git@github.com:seeburger-ag/org.ops4j.pax.web.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>web-4.2.2.SEE14</tag>
     </scm>
 
     <distributionManagement>
