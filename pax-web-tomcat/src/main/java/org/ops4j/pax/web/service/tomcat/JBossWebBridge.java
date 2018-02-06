@@ -17,6 +17,11 @@ import org.osgi.framework.FrameworkUtil;
 
 public class JBossWebBridge
 {
+    public void start(ContainerBase host)
+    {
+        start(host,null);
+    }
+
     public void start(ContainerBase host, ContainerBase developmentService)
     {
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
