@@ -17,10 +17,10 @@ import org.osgi.framework.FrameworkUtil;
 
 public class JBossWebBridge
 {
-    public void start(ContainerBase host)
+    public void start(ContainerBase host, ContainerBase developmentService)
     {
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServerControllerFactory factory = TomcatServerControllerFactory.newInstance(TomcatServerStateFactory.newInstance(new TomcatServerFactory(host)));
+        ServerControllerFactory factory = TomcatServerControllerFactory.newInstance(TomcatServerStateFactory.newInstance(new TomcatServerFactory(host,developmentService)));
         context.registerService(ServerControllerFactory.class, factory, null);
     }
 }

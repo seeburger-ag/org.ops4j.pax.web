@@ -53,7 +53,7 @@
 						<Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
 						<Import-Package>
-							org.ops4j.pax.web.service.spi.util; version=${project.version},
+							org.ops4j.pax.web.service.spi.util; version="[4.2,5.0)",
 							${bundle.namespace}; version="${project.version}",
 							javax.servlet; version="[2.3.0,4.0.0)",
 							javax.servlet.http; version="[2.3.0,4.0.0)",

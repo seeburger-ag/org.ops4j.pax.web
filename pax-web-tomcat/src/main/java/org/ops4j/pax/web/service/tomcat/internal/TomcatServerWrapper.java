@@ -223,12 +223,17 @@ public class TomcatServerWrapper implements ServerWrapper {
 			.getLogger(TomcatServerWrapper.class);
 	private static final String WEB_CONTEXT_PATH = "Web-ContextPath";
 	private final Container server;
+	private Container developmentService = null;
 	private final Map<HttpContext, HttpServiceContext> contextMap = new ConcurrentHashMap<HttpContext, HttpServiceContext>();
 
 	private ServiceRegistration<ServletContext> servletContextService;
 
 	private Map<String, Object> contextAttributes;
-
+    public TomcatServerWrapper(final Container server,Container developmentService) {
+        NullArgumentException.validateNotNull(server, "server");
+        this.server = server;
+        this.developmentService = developmentService;
+    }
 	public TomcatServerWrapper(final Container server) {
 		NullArgumentException.validateNotNull(server, "server");
 		this.server = server;
@@ -281,6 +286,21 @@ public class TomcatServerWrapper implements ServerWrapper {
 		LOG.info("add servlet [{}]", model);
 		final HttpServiceContext context = findOrCreateContext(model.getContextModel());
 		final String servletName = model.getName();
+        //restart development context
+		boolean restartContext = false;
+        if(context.getParent().getName().equals("development"))
+        {
+            int state = ((HttpServiceContext) context).getState();
+            if (STARTING==state || STARTED==state)
+            {
+                  try {
+                        restartContext = true;
+                        ((HttpServiceContext) context).stop();
+                    } catch (LifecycleException e) {
+                        LOG.warn("Can't reset the Lifecycle ... ", e);
+                    }
+            }
+        }		
 		if (model.getServlet() == null) {
 			// will do class for name and set init params
 			try {
@@ -378,6 +398,14 @@ public class TomcatServerWrapper implements ServerWrapper {
 				});
 			}
 		}
+        if (restartContext) {
+            try {
+                ((HttpServiceContext) context).start();
+            } catch (LifecycleException e) {
+                LOG.warn("Can't reset the Lifecycle ... ", e);
+            }
+        }
+		
 	}
 
 	private void createServletWrapper(final ServletModel model,
@@ -410,6 +438,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 		if (model.getLoadOnStartup() != null) {
 			sw.setLoadOnStartup(model.getLoadOnStartup());
 		}
+		
 //		if (model.getMultipartConfig() != null) {
 //			sw.setMultipartConfigElement(model.getMultipartConfig());
 //		}
@@ -993,11 +1022,19 @@ public class TomcatServerWrapper implements ServerWrapper {
     public HttpServiceContext addContext(final ContextModel contextModel, final Map<String, Object> contextAttributes, String basedir)
     {
 //        silence(host, "/" + contextName);
+        boolean useDevelopmentService = false;
         String contextName = contextModel.getContextName();
         if(contextName==null || contextName.isEmpty())
         {
             //do not allow root context. Map it on another context
-            contextName="root";
+            if(developmentService==null)
+            {
+                contextName="root";
+            }
+            else
+            {
+                useDevelopmentService = true;
+            }
         }
         HttpServiceContext ctx = new HttpServiceContext(server, contextModel.getAccessControllerContext());
         final HttpContext httpContext = contextModel.getHttpContext();
@@ -1008,7 +1045,14 @@ public class TomcatServerWrapper implements ServerWrapper {
 //        ctx.setWebappVersion(name);
         ctx.setName(name);
         ctx.setVersion("3.0");
-        ctx.setPath("/" + contextName);
+        if(useDevelopmentService)
+        {
+            ctx.setPath("");
+        }
+        else
+        {
+            ctx.setPath("/" + contextName);
+        }
         ctx.setDocBase(basedir);
 
         final Map<String, String> contextParams = contextModel.getContextParams();
@@ -1129,11 +1173,22 @@ public class TomcatServerWrapper implements ServerWrapper {
 
 //        if (host == null)
 //        {
-            boolean startChildren = ((ContainerBase)server).getStartChildren();
-            ((ContainerBase)server).setStartChildren(false);
-//            ctx.setParent(server);
-            server.addChild(ctx);
-            ((ContainerBase)server).setStartChildren(startChildren);
+            if(useDevelopmentService)
+            {
+                boolean startChildren = ((ContainerBase)developmentService).getStartChildren();
+                ((ContainerBase)server).setStartChildren(false);
+                ctx.setParent(server);
+                developmentService.addChild(ctx);
+                ((ContainerBase)developmentService).setStartChildren(startChildren);
+            }
+            else
+            {
+                boolean startChildren = ((ContainerBase)server).getStartChildren();
+                ((ContainerBase)server).setStartChildren(false);
+    //            ctx.setParent(server);
+                server.addChild(ctx);
+                ((ContainerBase)server).setStartChildren(startChildren);
+            }
 //        }
 //        else
 //        {
@@ -1178,6 +1233,10 @@ public class TomcatServerWrapper implements ServerWrapper {
                                       name = "[]-" + httpContext.getClass().getName();
                                   }*/
                                   //name it like jboss-web name it
+                                  if(contextName==null || contextName.isEmpty())
+                                  {
+                                      return "";
+                                  }
                                   return "/"+contextName;
                               }
 
@@ -1191,7 +1250,10 @@ public class TomcatServerWrapper implements ServerWrapper {
         if(contextName==null || contextName.isEmpty())
         {
             //do not allow root context. Map it on another context
-            contextName="root";
+            if(developmentService==null)
+            {
+                contextName="root";
+            }
         }
         String name = generateContextName(contextName,
                 contextModel.getHttpContext());
@@ -1204,6 +1266,10 @@ public class TomcatServerWrapper implements ServerWrapper {
     }
 
     Container findContainer(String contextName) {
+        if(contextName.equals("/") && developmentService!=null)
+        {
+            return developmentService.findChild(contextName);
+        }
         return server.findChild(contextName);
     }
 

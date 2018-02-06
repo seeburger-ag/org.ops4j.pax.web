@@ -28,15 +28,20 @@ public class TomcatServerFactory implements ServerFactory {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(TomcatServerFactory.class);
     private ContainerBase server;
+    private ContainerBase developmentService = null;
 
 	public TomcatServerFactory(ContainerBase server) {
 	    this.server = server;
 	}
 
-
+    public TomcatServerFactory(ContainerBase server, ContainerBase developmentService) {
+        this.server = server;
+        this.developmentService = developmentService;
+    }
+    
     @Override
     public ServerWrapper newServer(Configuration configuration)
     {
-        return new TomcatServerWrapper(server);
+        return new TomcatServerWrapper(server,developmentService);
     }
 }
