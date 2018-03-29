@@ -438,6 +438,13 @@ public class TomcatServerWrapper implements ServerWrapper {
 		if (model.getLoadOnStartup() != null) {
 			sw.setLoadOnStartup(model.getLoadOnStartup());
 		}
+		else
+		{
+		      if(context.getParent().getName().equals("development"))
+		      {
+		          sw.setLoadOnStartup(Integer.valueOf(1));
+		      }
+		}
 		
 //		if (model.getMultipartConfig() != null) {
 //			sw.setMultipartConfigElement(model.getMultipartConfig());
