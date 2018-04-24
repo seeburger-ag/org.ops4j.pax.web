@@ -104,10 +104,38 @@ public class WebAppParser {
 		// Find web xml
 		Enumeration<URL> entries = bundle.findEntries(rootPath + "WEB-INF", "web.xml", false);
 		URL webXmlURL = (entries != null && entries.hasMoreElements()) ? entries.nextElement() : null;
-		if (webXmlURL != null) {
-			InputStream inputStream = webXmlURL.openStream();
-			try {
-				Element rootElement = getRootElement(inputStream);
+        if (webXmlURL != null)
+        {
+            InputStream inputStream = webXmlURL.openStream();
+            try
+            {
+                Element rootElement;
+                try
+                {
+                    rootElement = getRootElement(inputStream);
+                }
+                catch (Throwable t)
+                {
+                    // try with setting TCCL and System-CL
+                    final Thread currentThread = Thread.currentThread();
+                    ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+                    try
+                    {
+                        currentThread.setContextClassLoader(WebAppParser.class.getClassLoader());
+                        rootElement = getRootElement(inputStream);
+                        LOG.info("SAXParserFactory loaded via TCCL after " + t.toString());
+                    }
+                    catch (Throwable t2)
+                    {
+                        currentThread.setContextClassLoader(ClassLoader.getSystemClassLoader());
+                        rootElement = getRootElement(inputStream);
+                        LOG.info("SAXParserFactory loaded via SystemClassLoader after " + t2.toString());
+                    }
+                    finally
+                    {
+                        currentThread.setContextClassLoader(contextClassLoader);
+                    }
+                }
 				// web-app attributes
 				majorVersion = scanMajorVersion(rootElement);
 				boolean metaDataComplete = parseBoolean(getAttribute(
