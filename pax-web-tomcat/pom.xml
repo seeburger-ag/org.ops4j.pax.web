@@ -277,13 +277,11 @@
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-api</artifactId>
 			<scope>provided</scope>
-            <version>4.2.2.SEE19-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-spi</artifactId>
 			<scope>provided</scope>
-            <version>4.2.2.SEE19-SNAPSHOT</version>
 		</dependency>
 
         <dependency>
@@ -309,7 +307,6 @@
 			<artifactId>pax-web-jsp</artifactId>
 			<scope>provided</scope>
 			<optional>true</optional>
-            <version>4.2.2.SEE19-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <artifactId>*</artifactId>
@@ -421,18 +418,15 @@
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-runtime</artifactId>
 			<scope>test</scope>
-            <version>4.2.2.SEE19-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-extender-whiteboard</artifactId>
 			<scope>test</scope>
-            <version>4.2.2.SEE19-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
 			<artifactId>pax-web-extender-war</artifactId>
-            <version>4.2.2.SEE19-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 
