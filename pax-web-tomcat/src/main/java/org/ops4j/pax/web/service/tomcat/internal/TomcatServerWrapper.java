@@ -86,6 +86,7 @@ import org.ops4j.pax.web.service.spi.model.Model;
 import org.ops4j.pax.web.service.spi.model.SecurityConstraintMappingModel;
 import org.ops4j.pax.web.service.spi.model.ServletModel;
 import org.ops4j.pax.web.service.spi.model.WelcomeFileModel;
+import org.ops4j.pax.web.service.spi.util.ResourceDelegatingBundleClassLoader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -968,7 +969,13 @@ public class TomcatServerWrapper implements ServerWrapper {
             }
         });
 
-		context.setParentClassLoader(contextModel.getClassLoader());
+        // Without this the el implementation is not found
+        ClassLoader classLoader = contextModel.getClassLoader();
+        List<Bundle> bundles = ((ResourceDelegatingBundleClassLoader) classLoader).getBundles();
+        ClassLoader parentClassLoader = getClass().getClassLoader();
+        ResourceDelegatingBundleClassLoader containerSpecificClassLoader = new ResourceDelegatingBundleClassLoader(bundles, parentClassLoader);
+        context.setParentClassLoader(containerSpecificClassLoader);
+
 		// TODO: is the context already configured?
 		// TODO: how about security, classloader?
 		// TODO: compare with JettyServerWrapper.addContext

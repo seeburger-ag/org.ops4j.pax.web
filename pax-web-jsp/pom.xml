@@ -166,8 +166,8 @@
 							javax.servlet.jsp.jstl.sql; version="1.2.1",
 							javax.servlet.jsp.jstl.tlv; version="1.2.1",
 							javax.servlet.jsp.resources; version="2.2",
-							javax.el.*; version="2.2",
-							org.apache.el.*; version="2.2",
+							<!--javax.el.*; version="2.2",
+							org.apache.el.*; version="2.2",-->
 							org.apache.jasper; version="2.2"; -split-package:="merge-first",
 							org.apache.jasper.compiler; version="2.2",
 							org.apache.jasper.compiler.tagplugin; version="2.2",
