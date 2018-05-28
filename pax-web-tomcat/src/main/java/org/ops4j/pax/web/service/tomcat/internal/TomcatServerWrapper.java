@@ -123,7 +123,8 @@ public class TomcatServerWrapper implements ServerWrapper {
 							@Override
 							public Servlet call() {
 								try {
-									return loadServlet();
+									LOG.info("Load servlet...");
+								    return loadServlet();
 								} catch (final ServletException e) {
 									LOG.warn(
 											"Caucht exception while loading Servlet with classloader {}",
@@ -143,7 +144,8 @@ public class TomcatServerWrapper implements ServerWrapper {
 			}
 
 			if (!instanceInitialized) {
-				initServlet(instance);
+			    LOG.info("Init servlet with instance "+instance.getClass().getName());
+			    initServlet(instance);
 			}
 
 			// skip the JMX part not needed here!
@@ -160,10 +162,12 @@ public class TomcatServerWrapper implements ServerWrapper {
                 } catch (IllegalAccessException e) {
                     throw new ServletException(e);
                 }
+                LOG.info("Init servlet with "+facade.getClass().getName());
                 instance.init(facade);
                 return instance;
             } else {
                 if (!instanceInitialized) {
+                    LOG.info("Init existing servlet...");
                     existing.init(facade);
                     instanceInitialized = true;
                 }
@@ -287,10 +291,11 @@ public class TomcatServerWrapper implements ServerWrapper {
 		LOG.info("add servlet [{}]", model);
 		final HttpServiceContext context = findOrCreateContext(model.getContextModel());
 		final String servletName = model.getName();
-        //restart development context
+		//restart development context
 		boolean restartContext = false;
         if(context.getParent().getName().equals("development"))
         {
+            LOG.info("Using development context");
             int state = ((HttpServiceContext) context).getState();
             if (STARTING==state || STARTED==state)
             {
@@ -301,7 +306,7 @@ public class TomcatServerWrapper implements ServerWrapper {
                         LOG.warn("Can't reset the Lifecycle ... ", e);
                     }
             }
-        }		
+        }
 		if (model.getServlet() == null) {
 			// will do class for name and set init params
 			try {
@@ -399,14 +404,26 @@ public class TomcatServerWrapper implements ServerWrapper {
 				});
 			}
 		}
+		
         if (restartContext) {
             try {
                 ((HttpServiceContext) context).start();
+                //short delay the ensure servlet initialization is complete
+                Thread.sleep(1000);
             } catch (LifecycleException e) {
-                LOG.warn("Can't reset the Lifecycle ... ", e);
+                LOG.warn("Can't start development context the Lifecycle ... ", e);
+            }
+            catch (InterruptedException e)
+            {
             }
         }
-		
+        if(context.getParent().getName().equals("development"))
+        {
+            Container[] children = ((HttpServiceContext) context).findChildren();
+            LOG.info("Develpoment context number of children "+children.length);
+            int state = ((HttpServiceContext) context).getState();
+            LOG.info("Development context is in state "+String.valueOf(state));
+        }
 	}
 
 	private void createServletWrapper(final ServletModel model,
@@ -478,6 +495,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 	public void removeContext(final HttpContext httpContext) {
 
 	    final HttpServiceContext ctext = contextMap.get(httpContext);
+	    LOG.info("removing context [{}]", httpContext);
 	    if(ctext!=null && ctext.getName().equals("/"))
 	    {
 	        LOG.info("removing root context is disabled for jboss-web [{}]", httpContext);
