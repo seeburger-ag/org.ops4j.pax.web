@@ -1089,6 +1089,12 @@ public class TomcatServerWrapper implements ServerWrapper {
         if(useDevelopmentService)
         {
             LOG.info("Create context for development service");
+            Container existingCtx = developmentService.findChild(name);
+            if(existingCtx!=null && existingCtx instanceof HttpServiceContext)
+            {
+                LOG.info("HttpService context for name "+name+" already exist");
+                return (HttpServiceContext)existingCtx;
+            }
             ctx.setPath("");
         }
         else
