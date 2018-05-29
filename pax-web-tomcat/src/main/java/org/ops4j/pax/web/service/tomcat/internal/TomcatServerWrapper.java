@@ -953,101 +953,109 @@ public class TomcatServerWrapper implements ServerWrapper {
 	}
 
 	private HttpServiceContext createContext(final ContextModel contextModel) {
-		final Bundle bundle = contextModel.getBundle();
-		final BundleContext bundleContext = BundleUtils
-				.getBundleContext(bundle);
-
-		String basePath = System.getProperty("javax.servlet.context.tempdir",System.getProperty("java.io.tmpdir"));
-		final HttpServiceContext context = addContext(contextModel,
-		                                              getContextAttributes(bundleContext),
-		                                              new File(basePath).getAbsolutePath());
-
-
-        context.setRealm(new RealmBase()
-        {
-
-            @Override
-            protected Principal getPrincipal(String username)
+	    try
+	    {
+    	    final Bundle bundle = contextModel.getBundle();
+    		final BundleContext bundleContext = BundleUtils
+    				.getBundleContext(bundle);
+    
+    		String basePath = System.getProperty("javax.servlet.context.tempdir",System.getProperty("java.io.tmpdir"));
+    		final HttpServiceContext context = addContext(contextModel,
+    		                                              getContextAttributes(bundleContext),
+    		                                              new File(basePath).getAbsolutePath());
+    
+    
+            context.setRealm(new RealmBase()
             {
-                return new CoyotePrincipal(username);
-            }
-
-
-            @Override
-            protected String getPassword(String username)
-            {
-                return "";
-            }
-
-
-            @Override
-            protected String getName()
-            {
-                return "kool realm v1.0"; //FIXME
-            }
-        });
-
-        // Without this the el implementation is not found
-        ClassLoader classLoader = contextModel.getClassLoader();
-        List<Bundle> bundles = ((ResourceDelegatingBundleClassLoader) classLoader).getBundles();
-        ClassLoader parentClassLoader = getClass().getClassLoader();
-        ResourceDelegatingBundleClassLoader containerSpecificClassLoader = new ResourceDelegatingBundleClassLoader(bundles, parentClassLoader);
-        context.setParentClassLoader(containerSpecificClassLoader);
-
-		// TODO: is the context already configured?
-		// TODO: how about security, classloader?
-		// TODO: compare with JettyServerWrapper.addContext
-		// TODO: what about the init parameters?
-
-		final int state = context.getState();
-		if (state !=STARTED && state != STARTING) {
-
-			LOG.debug("Registering ServletContext as service. ");
-			final Dictionary<String, String> properties = new Hashtable<String, String>();
-			properties.put("osgi.web.symbolicname", bundle.getSymbolicName());
-
-			final Dictionary<String, String> headers = bundle.getHeaders();
-			final String version = (String) headers
-					.get(Constants.BUNDLE_VERSION);
-			if (version != null && version.length() > 0) {
-				properties.put("osgi.web.version", version);
-			}
-
-			String webContextPath = (String) headers.get(WEB_CONTEXT_PATH);
-			final String webappContext = (String) headers.get("Webapp-Context");
-
-			final ServletContext servletContext = context.getServletContext();
-
-			// This is the default context, but shouldn't it be called default?
-			// See PAXWEB-209
-			if ("/".equalsIgnoreCase(context.getPath())
-					&& (webContextPath == null || webappContext == null)) {
-				webContextPath = context.getPath();
-			}
-
-			// makes sure the servlet context contains a leading slash
-			webContextPath = webContextPath != null ? webContextPath
-					: webappContext;
-			if (webContextPath != null && !webContextPath.startsWith("/")) {
-				webContextPath = "/" + webContextPath;
-			}
-
-			if (webContextPath == null) {
-				LOG.warn("osgi.web.contextpath couldn't be set, it's not configured");
-			}
-			else {
-			    //fix NullPointerException
-			    properties.put("osgi.web.contextpath", webContextPath);
-			}
-
-			servletContextService = bundleContext.registerService(
-					ServletContext.class, servletContext, properties);
-			LOG.debug("ServletContext registered as service. ");
-
-		}
-		contextMap.put(contextModel.getHttpContext(), context);
-
-		return context;
+    
+                @Override
+                protected Principal getPrincipal(String username)
+                {
+                    return new CoyotePrincipal(username);
+                }
+    
+    
+                @Override
+                protected String getPassword(String username)
+                {
+                    return "";
+                }
+    
+    
+                @Override
+                protected String getName()
+                {
+                    return "kool realm v1.0"; //FIXME
+                }
+            });
+    
+            // Without this the el implementation is not found
+            ClassLoader classLoader = contextModel.getClassLoader();
+            List<Bundle> bundles = ((ResourceDelegatingBundleClassLoader) classLoader).getBundles();
+            ClassLoader parentClassLoader = getClass().getClassLoader();
+            ResourceDelegatingBundleClassLoader containerSpecificClassLoader = new ResourceDelegatingBundleClassLoader(bundles, parentClassLoader);
+            context.setParentClassLoader(containerSpecificClassLoader);
+    
+    		// TODO: is the context already configured?
+    		// TODO: how about security, classloader?
+    		// TODO: compare with JettyServerWrapper.addContext
+    		// TODO: what about the init parameters?
+    
+    		final int state = context.getState();
+    		if (state !=STARTED && state != STARTING) {
+    
+    			LOG.debug("Registering ServletContext as service. ");
+    			final Dictionary<String, String> properties = new Hashtable<String, String>();
+    			properties.put("osgi.web.symbolicname", bundle.getSymbolicName());
+    
+    			final Dictionary<String, String> headers = bundle.getHeaders();
+    			final String version = (String) headers
+    					.get(Constants.BUNDLE_VERSION);
+    			if (version != null && version.length() > 0) {
+    				properties.put("osgi.web.version", version);
+    			}
+    
+    			String webContextPath = (String) headers.get(WEB_CONTEXT_PATH);
+    			final String webappContext = (String) headers.get("Webapp-Context");
+    
+    			final ServletContext servletContext = context.getServletContext();
+    
+    			// This is the default context, but shouldn't it be called default?
+    			// See PAXWEB-209
+    			if ("/".equalsIgnoreCase(context.getPath())
+    					&& (webContextPath == null || webappContext == null)) {
+    				webContextPath = context.getPath();
+    			}
+    
+    			// makes sure the servlet context contains a leading slash
+    			webContextPath = webContextPath != null ? webContextPath
+    					: webappContext;
+    			if (webContextPath != null && !webContextPath.startsWith("/")) {
+    				webContextPath = "/" + webContextPath;
+    			}
+    
+    			if (webContextPath == null) {
+    				LOG.warn("osgi.web.contextpath couldn't be set, it's not configured");
+    			}
+    			else {
+    			    //fix NullPointerException
+    			    properties.put("osgi.web.contextpath", webContextPath);
+    			}
+    
+    			servletContextService = bundleContext.registerService(
+    					ServletContext.class, servletContext, properties);
+    			LOG.debug("ServletContext registered as service. ");
+    
+    		}
+    		contextMap.put(contextModel.getHttpContext(), context);
+    
+    		return context;
+	    }
+	    catch(Throwable t)
+	    {
+	        LOG.error("Unable to create context ",t);
+	        return null;
+	    }
 	}
 
 
@@ -1061,6 +1069,7 @@ public class TomcatServerWrapper implements ServerWrapper {
             //do not allow root context. Map it on another context
             if(developmentService==null)
             {
+                LOG.info("No development service available. Create context with name \"root\"");
                 contextName="root";
             }
             else
@@ -1079,6 +1088,7 @@ public class TomcatServerWrapper implements ServerWrapper {
         ctx.setVersion("3.0");
         if(useDevelopmentService)
         {
+            LOG.info("Create context for development service");
             ctx.setPath("");
         }
         else
@@ -1122,6 +1132,7 @@ public class TomcatServerWrapper implements ServerWrapper {
             }
         });
 
+        LOG.info("add parameters to context");
         for (Entry<String, String> e : contextParams.entrySet())
         {
             ctx.addParameter(e.getKey(), e.getValue());
@@ -1129,12 +1140,14 @@ public class TomcatServerWrapper implements ServerWrapper {
 
         if(contextModel.getTrackingMode() != null)
         {
+            LOG.info("set session tracking mode on context");
             Set<SessionTrackingMode> sessionTrackingModes = new HashSet<SessionTrackingMode>();
             sessionTrackingModes.add(SessionTrackingMode.valueOf(contextModel.getTrackingMode()));
             ctx.setSessionTrackingModes(sessionTrackingModes);
         }
 
         // Add Session config
+        LOG.info("set session cookie handling on context");
         SessionCookie sessionCookie = ctx.getSessionCookie();
         final String sessionDomain = contextModel.getSessionDomain();
         if(sessionDomain==null || sessionDomain.isEmpty())
@@ -1165,6 +1178,7 @@ public class TomcatServerWrapper implements ServerWrapper {
         // configurationWorkerName //TODO: missing
 
         // new OSGi methods
+        LOG.info("set HttpContext on context");
         ctx.setHttpContext(httpContext);
         // TODO: what about the AccessControlContext?
         // TODO: the virtual host section below
@@ -1183,6 +1197,7 @@ public class TomcatServerWrapper implements ServerWrapper {
         // Add default JSP ContainerInitializer
         if (isJspAvailable())
         { // use JasperClassloader
+            LOG.info("JSP is available");
             try
             {
                 @SuppressWarnings("unchecked")
@@ -1207,6 +1222,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 //        {
             if(useDevelopmentService)
             {
+                LOG.info("Add context as child on development service");
                 boolean startChildren = ((ContainerBase)developmentService).getStartChildren();
                 ((ContainerBase)server).setStartChildren(false);
                 ctx.setParent(server);
@@ -1215,6 +1231,7 @@ public class TomcatServerWrapper implements ServerWrapper {
             }
             else
             {
+                LOG.info("Add context as child on default service");
                 boolean startChildren = ((ContainerBase)server).getStartChildren();
                 ((ContainerBase)server).setStartChildren(false);
     //            ctx.setParent(server);
@@ -1234,6 +1251,7 @@ public class TomcatServerWrapper implements ServerWrapper {
 //        ctx.getPipeline().addValve(new OSGiAuthenticatorValve(httpContext));
 
         // MIME mappings
+        LOG.info("Add mime mappings");
         for (int i = 0; i < DEFAULT_MIME_MAPPINGS.length;)
         {
             ctx.addMimeMapping(DEFAULT_MIME_MAPPINGS[i++], DEFAULT_MIME_MAPPINGS[i++]);
