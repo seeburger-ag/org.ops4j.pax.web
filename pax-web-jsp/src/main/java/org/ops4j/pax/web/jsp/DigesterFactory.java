@@ -42,8 +42,20 @@ import org.xml.sax.ext.EntityResolver2;
  */
 public class DigesterFactory {
 
-	private static final Log log = LogFactory.getLog(DigesterFactory.class);
-	private static final StringManager sm = StringManager
+    /**
+     * Mapping of well-known public IDs used by the Servlet API to the matching
+     * local resource.
+     */
+    public static final Map<String, String> SERVLET_API_PUBLIC_IDS;
+
+    /**
+     * Mapping of well-known system IDs used by the Servlet API to the matching
+     * local resource.
+     */
+    public static final Map<String, String> SERVLET_API_SYSTEM_IDS;
+
+	private static final Log LOG = LogFactory.getLog(DigesterFactory.class);
+	private static final StringManager SM = StringManager
 			.getManager(Constants.PACKAGE_NAME);
 
 	private static final Class<ServletContext> CLASS_SERVLET_CONTEXT;
@@ -59,18 +71,6 @@ public class DigesterFactory {
 		}
 		CLASS_JSP_CONTEXT = jspContext;
 	}
-
-	/**
-	 * Mapping of well-known public IDs used by the Servlet API to the matching
-	 * local resource.
-	 */
-	public static final Map<String, String> SERVLET_API_PUBLIC_IDS;
-
-	/**
-	 * Mapping of well-known system IDs used by the Servlet API to the matching
-	 * local resource.
-	 */
-	public static final Map<String, String> SERVLET_API_SYSTEM_IDS;
 
 	static {
 		Map<String, String> publicIds = new HashMap<>();
@@ -176,7 +176,7 @@ public class DigesterFactory {
 			Bundle bundle = FrameworkUtil.getBundle(DigesterFactory.class);
 			Enumeration<URL> findEntries = bundle.findEntries("**/resources/",
 					name, false);
-			while (findEntries.hasMoreElements()) {
+			while (findEntries!=null && findEntries.hasMoreElements()) {
 				URL nextElement = findEntries.nextElement();
 				if (nextElement != null) {
 					location = nextElement;
@@ -185,7 +185,7 @@ public class DigesterFactory {
 			}
 		}
 		if (location == null) {
-			log.warn(sm.getString("digesterFactory.missingSchema", name));
+			LOG.warn(SM.getString("digesterFactory.missingSchema", name));
 			return null;
 		}
 		return location.toExternalForm();
@@ -193,18 +193,14 @@ public class DigesterFactory {
 
 	/**
 	 * Create a <code>Digester</code> parser.
-	 * 
-	 * @param xmlValidation
-	 *            turn on/off xml validation
-	 * @param xmlNamespaceAware
-	 *            turn on/off namespace validation
-	 * @param rule
-	 *            an instance of <code>RuleSet</code> used for parsing the xml.
-	 * @param blockExternal
-	 *            turn on/off the blocking of external resources
+	 *
+	 * @param xmlValidation     turn on/off xml validation
+	 * @param xmlNamespaceAware turn on/off namespace validation
+	 * @param rule              an instance of <code>RuleSet</code> used for parsing the xml.
+	 * @param blockExternal     turn on/off the blocking of external resources
 	 */
 	public static Digester newDigester(boolean xmlValidation,
-			boolean xmlNamespaceAware, RuleSet rule, boolean blockExternal) {
+									   boolean xmlNamespaceAware, RuleSet rule, boolean blockExternal) {
 		Digester digester = new Digester();
 		digester.setNamespaceAware(xmlNamespaceAware);
 		digester.setValidating(xmlValidation);

@@ -33,199 +33,113 @@
 			</resource>
 			<resource>
 				<directory>target/dependency</directory>
-				<excludes>
-					<exclude>org/apache/jasper/compiler/TagLibraryInfoImpl.java</exclude>
-					<exclude>org/apache/jasper/compiler/TldCache.java</exclude>
-					<exclude>org/apache/jasper/compiler/JspConfig.java</exclude>
-					<exclude>org/apache/jasper/JspCompilationContext.java</exclude>
-					<exclude>org/apache/jasper/servlet/JspServletWrapper.java</exclude>
-					<exclude>org/apache/tomcat/util/descriptor/tagplugin/TagPluginParser.java</exclude>
-				</excludes>
 			</resource>
 		</resources>
 
 		<plugins>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<configuration>
-					<instructions>
-						<Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
-						<Bundle-Version>${project.version}</Bundle-Version>
-						<Import-Package>
-							org.ops4j.pax.web.service.spi.util; version="[4.2,5.0)",
-							${bundle.namespace}; version="${project.version}",
-							javax.servlet; version="[2.3.0,4.0.0)",
-							javax.servlet.http; version="[2.3.0,4.0.0)",
-							javax.servlet.descriptor;version="[2.3.0,4.0.0)",
-							javax.naming,
-							org.w3c.dom,
-							org.w3c.dom.ls; resolution:=optional,
-							org.w3c.dom.traversal; resolution:=optional,
-							org.xml.sax.*,
-							org.slf4j; version="[1.5,2.0)",
-							org.apache.tools.ant.*; resolution:=optional,
-							org.eclipse.*; resolution:=optional,
-							org.osgi.service.http,
-							org.osgi.framework; version="[1.0.0,2.0.0)",
-							org.osgi.service.packageadmin; resolution:=optional,
-							org.ops4j.pax.web.utils,
-							javax.sql; resolution:=optional,
-							javax.xml.parsers,
-							javax.xml.validation; resolution:=optional,
-							javax.xml.namespace; resolution:=optional,
-							javax.xml.transform.*; resolution:=optional,
-							javax.xml.xpath; resolution:=optional,
-							javax.annotation.*,
-							javax.tools,
-							org.osgi.util.tracker,
-							javax.servlet.jsp; version="2.3.1",
-							javax.servlet.jsp.el; version="2.3.1",
-							javax.servlet.jsp.tagext; version="2.3.1",
-							javax.servlet.jsp.jstl.core; version="1.2.1",
-							javax.servlet.jsp.jstl.fmt; version="1.2.1",
-							javax.servlet.jsp.jstl.sql; version="1.2.1",
-							javax.servlet.jsp.jstl.tlv; version="1.2.1",
-							javax.servlet.jsp.resources; version="2.2",
-							<!-- org.apache.tomcat;resolution:=optional; -split-package:="merge-last",
-							org.apache.tomcat.util; resolution:=optional; -split-package:="merge-last",
-							org.apache.tomcat.util.scan; resolution:=optional; -split-package:="merge-last",
-							org.apache.tomcat.util.res; resolution:=optional; -split-package:="merge-last",
-							org.apache.tomcat.util.file; resolution:=optional; -split-package:="merge-last",
-							org.apache.tomcat.util.digester;resolution:=optional; -split-package:="merge-last",
-							org.apache.tomcat.util.descriptor.tld;resolution:=optional; -split-package:="merge-last", -->
-							org.apache.catalina.loader;resolution:=optional,
-							org.apache.juli.logging,
-							!org.eclipse.jdt.core.index,
- 							!org.eclipse.jdt.core.util,
-							!com.sun.tools.javac,
-							!sun.tools.javac,
-							!com.sun.org.apache.*,
-							!javax.management.*,
-							!javax.naming.directory,
-							!org.apache.env,
-							!org.apache.geronimo.osgi.registry.api,
-							!sun.rmi.rmic,
-							!org.ops4j.pax.web.jsp
-						</Import-Package>
-						<Private-Package>
-							org.ops4j.pax.web.jsp.*,
-							javax.servlet.resources,
-							javax.el.*; version="2.2",
-							org.apache.el.*; version="2.2",
-							org.apache.jasper; version="2.2",
-							org.apache.jasper.compiler; version="2.2",
-							org.apache.jasper.compiler.tagplugin; version="2.2",
-							org.apache.jasper.el; version="2.2",
-							org.apache.jasper.resources; version="2.2",
-							org.apache.jasper.runtime; version="2.2",
-							org.apache.jasper.security; version="2.2",
-							org.apache.jasper.servlet; version="2.2",
-							org.apache.jasper.tagplugins.jstl; version="2.2",
-							org.apache.jasper.xmlparser; version="2.2",
-							org.apache.taglibs.standard,
-							org.apache.taglibs.standard.extra.spath,
-							org.apache.taglibs.standard.functions,
-							org.apache.taglibs.standard.lang.jstl,
-							org.apache.taglibs.standard.lang.jstl.parser,
-							org.apache.taglibs.standard.lang.jstl.test,
-							org.apache.taglibs.standard.lang.jstl.test.beans,
-							org.apache.taglibs.standard.lang.support,
-							org.apache.taglibs.standard.resources,
-							org.apache.taglibs.standard.tag.common.core,
-							org.apache.taglibs.standard.tag.common.fmt,
-							org.apache.taglibs.standard.tag.common.sql,
-							org.apache.taglibs.standard.tag.common.xml,
-							org.apache.taglibs.standard.tag.el.core,
-							org.apache.taglibs.standard.tag.el.fmt,
-							org.apache.taglibs.standard.tag.el.sql,
-							org.apache.taglibs.standard.tag.el.xml,
-							org.apache.taglibs.standard.tag.rt.core,
-							org.apache.taglibs.standard.tag.rt.fmt,
-							org.apache.taglibs.standard.tag.rt.sql,
-							org.apache.taglibs.standard.tag.rt.xml,
-							org.apache.taglibs.standard.tei,
-							org.apache.taglibs.standard.tlv,
-							org.apache.tomcat,
-							org.apache.tomcat.util,
-							org.apache.tomcat.util.scan,
-							org.apache.tomcat.util.res,
-							org.apache.tomcat.util.file,
-							org.apache.tomcat.util.digester,
-							org.apache.tomcat.util.descriptor,
-							org.apache.tomcat.util.descriptor.tagplugin,
-							org.apache.juli.logging
-						</Private-Package>
-						<Export-Package>
-							${bundle.namespace}; version="${project.version}",
-							javax.servlet.jsp; version="2.3.1",
-							javax.servlet.jsp.el; version="2.3.1",
-							javax.servlet.jsp.tagext; version="2.3.1",
-							javax.servlet.jsp.jstl.core; version="1.2.1",
-							javax.servlet.jsp.jstl.fmt; version="1.2.1",
-							javax.servlet.jsp.jstl.sql; version="1.2.1",
-							javax.servlet.jsp.jstl.tlv; version="1.2.1",
-							javax.servlet.jsp.resources; version="2.2",
-							<!--javax.el.*; version="2.2",
-							org.apache.el.*; version="2.2",-->
-							org.apache.jasper; version="2.2"; -split-package:="merge-first",
-							org.apache.jasper.compiler; version="2.2",
-							org.apache.jasper.compiler.tagplugin; version="2.2",
-							org.apache.jasper.el; version="2.2",
-							org.apache.jasper.resources; version="2.2",
-							org.apache.jasper.runtime; version="2.2",
-							org.apache.jasper.security; version="2.2",
-							org.apache.jasper.servlet; version="2.2",
-							org.apache.jasper.tagplugins.jstl; version="2.2",
-							org.apache.jasper.xmlparser; version="2.2",
-							org.apache.taglibs.standard,
-							org.apache.taglibs.standard.extra.spath,
-							org.apache.taglibs.standard.functions,
-							org.apache.taglibs.standard.lang.jstl,
-							org.apache.taglibs.standard.lang.jstl.parser,
-							org.apache.taglibs.standard.lang.jstl.test,
-							org.apache.taglibs.standard.lang.jstl.test.beans,
-							org.apache.taglibs.standard.lang.support,
-							org.apache.taglibs.standard.resources,
-							org.apache.taglibs.standard.tag.common.core,
-							org.apache.taglibs.standard.tag.common.fmt,
-							org.apache.taglibs.standard.tag.common.sql,
-							org.apache.taglibs.standard.tag.common.xml,
-							org.apache.taglibs.standard.tag.el.core,
-							org.apache.taglibs.standard.tag.el.fmt,
-							org.apache.taglibs.standard.tag.el.sql,
-							org.apache.taglibs.standard.tag.el.xml,
-							org.apache.taglibs.standard.tag.rt.core,
-							org.apache.taglibs.standard.tag.rt.fmt,
-							org.apache.taglibs.standard.tag.rt.sql,
-							org.apache.taglibs.standard.tag.rt.xml,
-							org.apache.taglibs.standard.tei,
-							org.apache.taglibs.standard.tlv,
-							org.apache.tomcat.util.descriptor.tld
-						</Export-Package>
-						<Include-Resource> {maven-dependencies},
-							{maven-resources},
-							org/apache/jasper/compiler/TagLibraryInfoImpl.class=target/classes/org/apache/jasper/compiler/TagLibraryInfoImpl.class,
-							org/apache/jasper/compiler/TldCache.class=target/classes/org/apache/jasper/compiler/TldCache.class,
-							org/apache/jasper/compiler/JspConfig.class=target/classes/org/apache/jasper/compiler/JspConfig.class,
-							org/apache/jasper/JspCompilationContext.class=target/classes/org/apache/jasper/JspCompilationContext.class,
-							org/apache/jasper/servlet/JspServletWrapper.class=target/classes/org/apache/jasper/servlet/JspServletWrapper.class,
-							org/apache/tomcat/util/descriptor/tagplugin/TagPluginParser.class=target/classes/org/apache/tomcat/util/descriptor/tagplugin/TagPluginParser.class
-						</Include-Resource>
-						<Embed-Dependency>*; scope=compile; type=!pom;
-							inline=**/*.class|**/*.ico|**/*.dtd|**/*.xml|**/*.properties|**/*.map|**/*.default|**/*.providers|**/*.tld|**/*.rsc</Embed-Dependency>
-						<Embed-Transitive>true</Embed-Transitive>
-						<_removeheaders>
-							Include-Resource,
-							Private-Package,
-							Embed-Dependency,
-							Embed-Transitive
-						</_removeheaders>
-						<_nouses>true</_nouses>
-					</instructions>
-				</configuration>
-			</plugin>
-			<plugin>
+            <!--plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>org/**/*.*</include>
+                                <include>OSGI-INF/**/*</include>
+                            </includes>
+                            <archive>
+                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin-->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Import-Package>
+                        org.ops4j.pax.web.service.spi.util; version="[4.2,5.0)",
+                        ${bundle.namespace}; version="${project.version}",
+                        javax.el,
+                        javax.servlet; version="[2.3.0,4.0.0)",
+                        javax.servlet.http; version="[2.3.0,4.0.0)",
+                        javax.servlet.descriptor;version="[2.3.0,4.0.0)",
+                        javax.servlet.jsp,
+                        javax.servlet.jsp.el,
+                        javax.servlet.jsp.tagext,
+                        javax.servlet.jsp.jstl.core; version="1.2.1",
+                        javax.servlet.jsp.jstl.fmt; version="1.2.1",
+                        javax.servlet.jsp.jstl.sql; version="1.2.1",
+                        javax.servlet.jsp.jstl.tlv; version="1.2.1",
+                        org.ops4j.pax.web.utils,
+                        org.osgi.service.http,
+                        org.osgi.framework; version="[1.0.0,2.0.0)",
+                        org.osgi.framework.wiring; version="[1.0.0,2.0.0)",
+                        org.osgi.service.packageadmin; resolution:=optional,
+                        org.apache.el,
+                        org.apache.catalina.deploy.jsp,
+                        org.apache.tomcat; resolution:=optional; -split-package:="merge-last",
+                        org.apache.jasper;resolution:=optional; -split-package:="merge-last",
+                        org.apache.jasper.servlet;resolution:=optional; -split-package:="merge-last",
+                        org.apache.jasper.compiler;resolution:=optional; -split-package:="merge-last",
+                        org.apache.jasper.compiler.tagplugin,
+                        org.apache.jasper.el,
+                        org.apache.jasper.resources,
+                        org.apache.jasper.runtime,
+                        org.apache.jasper.security,
+                        org.apache.jasper.tagplugins.jstl,
+                        org.apache.jasper.xmlparser,
+                        org.slf4j; version="[1.5,2.0)",
+                        org.jboss.logging,
+                        javax.naming,
+                        org.w3c.dom,
+                        org.w3c.dom.ls; resolution:=optional,
+                        org.w3c.dom.traversal; resolution:=optional,
+                        org.xml.sax.*,
+                        javax.xml.parsers,
+                        javax.xml.validation; resolution:=optional,
+                        javax.xml.namespace; resolution:=optional,
+                        javax.xml.transform.*; resolution:=optional,
+                        javax.xml.xpath; resolution:=optional,
+                        javax.annotation.*,
+                        javax.tools,
+                        org.osgi.util.tracker
+                        </Import-Package>
+                        <Private-Package>org.apache.tomcat.util.*</Private-Package>
+                        <Export-Package>
+                        ${bundle.namespace}; version="${project.version}",
+                        org.apache.tomcat.util.security; version="2.2"; -split-package:=merge-first,
+                        javax.servlet.jsp.jstl.core; version="1.2.1",
+                        javax.servlet.jsp.jstl.fmt; version="1.2.1",
+                        javax.servlet.jsp.jstl.sql; version="1.2.1",
+                        javax.servlet.jsp.jstl.tlv; version="1.2.1"
+                        </Export-Package>
+                        <Include-Resource> {maven-dependencies},
+                            {maven-resources},
+                        </Include-Resource>
+                        <Embed-Dependency>*; scope=compile; type=!pom;
+                            inline=**/*.class|**/*.ico|**/*.dtd|**/*.xml|**/*.properties|**/*.map|**/*.default|**/*.providers|**/*.tld|**/*.rsc</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
+                        <_removeheaders>
+                            Include-Resource,
+                            Private-Package,
+                            Embed-Dependency,
+                            Embed-Transitive
+                        </_removeheaders>
+                        <_nouses>true</_nouses>
+                    </instructions>
+                </configuration>
+            </plugin>
+			<!--plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
@@ -238,8 +152,8 @@
 						<configuration>
 							<artifactItems>
 								<artifactItem>
-									<groupId>org.apache.tomcat.embed</groupId>
-									<artifactId>tomcat-embed-jasper</artifactId>
+									<groupId>org.apache.tomcat</groupId>
+									<artifactId>tomcat-util-scan</artifactId>
 									<version>8.0.14</version>
 									<classifier>sources</classifier>
 								</artifactItem>
@@ -247,7 +161,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin-->
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
@@ -292,6 +206,22 @@
 			<scope>compile</scope>
 			<optional>true</optional>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-util-scan</artifactId>
+            <version>8.0.14</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-util</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
 		<dependency>
 			<groupId>org.apache.geronimo.bundles</groupId>
@@ -299,8 +229,26 @@
 			<version>1.2_1</version>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.web</groupId>
+            <artifactId>jbossweb</artifactId>
+            <version>7.0.13.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.servlet.jsp</groupId>
+            <artifactId>jboss-jsp-api_2.2_spec</artifactId>
+            <version>1.0.0.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <scope>provided</scope>
+            <version>3.1.0.GA</version>
+        </dependency>
 
-		<dependency>
+		<!--dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-jasper</artifactId>
 			<version>8.0.14</version>
@@ -314,15 +262,19 @@
 					<artifactId>core</artifactId>
 					<groupId>org.eclipse.jdt</groupId>
 				</exclusion>
+				<exclusion>
+				    <groupId>org.apache.tomcat.embed</groupId>
+				    <artifactId>tomcat-embed-el</artifactId>
+				</exclusion>
 			</exclusions>
-		</dependency>
+		</dependency-->
 
-		<dependency>
+		<!--dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-core</artifactId>
 			<version>8.0.14</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency-->
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-logging-juli</artifactId>
@@ -343,11 +295,11 @@
 			<artifactId>org.osgi.core</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>${servlet.spec.groupId}</groupId>
 			<artifactId>${servlet.spec.artifactId}</artifactId>
 			<scope>provided</scope>
-		</dependency>
+		</dependency-->
 
 		<dependency>
 			<groupId>org.slf4j</groupId>

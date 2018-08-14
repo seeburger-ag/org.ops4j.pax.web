@@ -38,16 +38,16 @@ import org.xml.sax.SAXException;
  * Parses a Tag Library Descriptor.
  */
 public class TldParser {
-	private static final Log log = LogFactory.getLog(TldParser.class);
+	private static final Log LOG = LogFactory.getLog(TldParser.class);
 	private final Digester digester;
 
 	public TldParser(boolean namespaceAware, boolean validation,
-			boolean blockExternal) {
+					 boolean blockExternal) {
 		this(namespaceAware, validation, new TldRuleSet(), blockExternal);
 	}
 
 	public TldParser(boolean namespaceAware, boolean validation,
-			RuleSet ruleSet, boolean blockExternal) {
+					 RuleSet ruleSet, boolean blockExternal) {
 		digester = DigesterFactory.newDigester(validation, namespaceAware,
 				ruleSet, blockExternal);
 	}
@@ -81,7 +81,7 @@ public class TldParser {
 			digester.parse(source);
 			if (!handler.getWarnings().isEmpty()
 					|| !handler.getErrors().isEmpty()) {
-				handler.logFindings(log, source.getSystemId());
+				handler.logFindings(LOG, source.getSystemId());
 				if (!handler.getErrors().isEmpty()) {
 					// throw the first to indicate there was a error during
 					// processing

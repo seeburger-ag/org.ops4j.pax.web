@@ -27,7 +27,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.jasper.Constants;
 import org.apache.jasper.servlet.JspServlet;
 import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils;
 import org.osgi.framework.Bundle;
@@ -37,12 +36,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Wrapper of Jasper JspServlet that knows how to deal with resources loaded
  * from osgi context.
- * 
+ *
  * @author Alin Dreghiciu
  * @since 0.3.0, January 07, 2008
  */
 public class JspServletWrapper implements Servlet {
 
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
 	/**
 	 * Logger.
 	 */
@@ -65,12 +68,12 @@ public class JspServletWrapper implements Servlet {
 	 * mechanism. Only advanced users will need this, most others should simply
 	 * use the other constructors that will provide a default class loader that
 	 * delegates to the bundle.
-	 * 
+	 *
 	 * @param jspFile
 	 * @param classLoader
 	 */
 	public JspServletWrapper(final String jspFile,
-			final URLClassLoader classLoader) {
+							 final URLClassLoader classLoader) {
 		jasperServlet = new JspServlet();
 		jasperClassLoader = classLoader;
 		this.jspFile = jspFile;
@@ -87,7 +90,7 @@ public class JspServletWrapper implements Servlet {
 
 	/**
 	 * Delegates to jasper servlet with a controlled context class loader.
-	 * 
+	 *
 	 * @see JspServlet#init(ServletConfig)
 	 */
 	@Override
@@ -110,7 +113,7 @@ public class JspServletWrapper implements Servlet {
 			// re-thrown
 			throw e;
 			//CHECKSTYLE:OFF
-		} catch (Exception ignore) { 
+		} catch (Exception ignore) {
 			// ignored as it should never happen
 			LOG.error("Ignored exception", ignore);
 		}
@@ -119,7 +122,7 @@ public class JspServletWrapper implements Servlet {
 
 	/**
 	 * Delegates to jasper servlet.
-	 * 
+	 *
 	 * @see JspServlet#getServletConfig()
 	 */
 	@Override
@@ -129,15 +132,14 @@ public class JspServletWrapper implements Servlet {
 
 	/**
 	 * Delegates to jasper servlet with a controlled context class loader.
-	 * 
+	 *
 	 * @see JspServlet#service(ServletRequest, ServletResponse)
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	public void service(final ServletRequest req, final ServletResponse res)
 			throws ServletException, IOException {
 		if (jspFile != null) {
-			req.setAttribute(Constants.JSP_FILE, jspFile);
+			req.setAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH, jspFile);
 		}
 		String includeRequestUri = (String) req
 				.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI);
@@ -157,13 +159,9 @@ public class JspServletWrapper implements Servlet {
 						}
 
 					});
-		} catch (ServletException e) {
+		} catch (ServletException | IOException e) {
 			// re-thrown
 			throw e;
-		} catch (IOException e) {
-			// re-thrown
-			throw e;
-			//CHECKSTYLE:OFF
 		} catch (Exception ignore) {
 			// ignored as it should never happen
 			LOG.error("Ignored exception", ignore);
@@ -173,7 +171,7 @@ public class JspServletWrapper implements Servlet {
 
 	/**
 	 * Delegates to jasper servlet.
-	 * 
+	 *
 	 * @see JspServlet#getServletInfo()
 	 */
 	@Override
@@ -183,7 +181,7 @@ public class JspServletWrapper implements Servlet {
 
 	/**
 	 * Delegates to jasper servlet with a controlled context class loader.
-	 * 
+	 *
 	 * @see JspServlet#destroy()
 	 */
 	@Override
@@ -210,9 +208,9 @@ public class JspServletWrapper implements Servlet {
 	/**
 	 * Provides access to the embedded class loader, mostly useful for
 	 * performing validation checks on the class loader in integration tests.
-	 * 
+	 *
 	 * @return the internal class loader used to dispatch to the underlying
-	 *         Jasper servlet.
+	 * Jasper servlet.
 	 */
 	public URLClassLoader getClassLoader() {
 		return jasperClassLoader;

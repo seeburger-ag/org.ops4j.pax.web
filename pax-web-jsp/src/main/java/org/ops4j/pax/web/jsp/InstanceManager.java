@@ -1,3 +1,18 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.
+ *
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.ops4j.pax.web.jsp;
 
 import java.lang.reflect.InvocationTargetException;
@@ -24,11 +39,11 @@ import org.apache.jasper.security.SecurityUtil;
 
 public class InstanceManager implements org.apache.tomcat.InstanceManager {
 
-	private final Map<String, Map<String, String>> injectionMap = new HashMap<String, Map<String, String>>();
+	private final Map<String, Map<String, String>> injectionMap = new HashMap<>();
 
 	private final Properties restrictedFilters = new Properties();
 	private final Properties restrictedListeners = new Properties();
-	private final Map<Class<?>, List<AnnotationCacheEntry>> annotationCache = new WeakHashMap<Class<?>, List<AnnotationCacheEntry>>();
+	private final Map<Class<?>, List<AnnotationCacheEntry>> annotationCache = new WeakHashMap<>();
 
 	@Override
 	public Object newInstance(String className) throws IllegalAccessException,
@@ -42,7 +57,7 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 
 	@Override
 	public Object newInstance(final String className,
-			final ClassLoader classLoader) throws IllegalAccessException,
+							  final ClassLoader classLoader) throws IllegalAccessException,
 			InvocationTargetException, InstantiationException,
 			ClassNotFoundException {
 		Class<?> clazz = classLoader.loadClass(className);
@@ -85,14 +100,10 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 	 * Call preDestroy method on the specified instance recursively from deepest
 	 * superclass to actual class.
 	 *
-	 * @param instance
-	 *            object to call preDestroy methods on
-	 * @param clazz
-	 *            (super) class to examine for preDestroy annotation.
-	 * @throws IllegalAccessException
-	 *             if preDestroy method is inaccessible.
-	 * @throws java.lang.reflect.InvocationTargetException
-	 *             if call fails
+	 * @param instance object to call preDestroy methods on
+	 * @param clazz    (super) class to examine for preDestroy annotation.
+	 * @throws IllegalAccessException                      if preDestroy method is inaccessible.
+	 * @throws java.lang.reflect.InvocationTargetException if call fails
 	 */
 	protected void preDestroy(Object instance, final Class<?> clazz)
 			throws IllegalAccessException, InvocationTargetException {
@@ -128,18 +139,14 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 	 * Make sure that the annotations cache has been populated for the provided
 	 * class.
 	 *
-	 * @param clazz
-	 *            clazz to populate annotations for
-	 * @param injections
-	 *            map of injections for this class from xml deployment
-	 *            descriptor
-	 * @throws IllegalAccessException
-	 *             if injection target is inaccessible
-	 * @throws java.lang.reflect.InvocationTargetException
-	 *             if injection fails
+	 * @param clazz      clazz to populate annotations for
+	 * @param injections map of injections for this class from xml deployment
+	 *                   descriptor
+	 * @throws IllegalAccessException                      if injection target is inaccessible
+	 * @throws java.lang.reflect.InvocationTargetException if injection fails
 	 */
 	protected void populateAnnotationsCache(Class<?> clazz,
-			Map<String, String> injections) throws IllegalAccessException,
+											Map<String, String> injections) throws IllegalAccessException,
 			InvocationTargetException {
 
 		while (clazz != null) {
@@ -148,23 +155,23 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 				annotations = annotationCache.get(clazz);
 			}
 			if (annotations == null) {
-				annotations = new ArrayList<AnnotationCacheEntry>();
+				annotations = new ArrayList<>();
 
 				// Initialize methods annotations
 				Method[] methods = null;
 				methods = clazz.getDeclaredMethods();
-//				getClass().getClassLoader().loadClass("javax.annotation.PostConstruct")
+
 				Method postConstruct = null;
 				Method preDestroy = null;
 				for (Method method : methods) {
-				try {
+
 					if (method.isAnnotationPresent(PostConstruct.class)) {
 						if ((postConstruct != null)
 								|| (method.getParameterTypes().length != 0)
 								|| (Modifier.isStatic(method.getModifiers()))
 								|| (method.getExceptionTypes().length > 0)
 								|| (!method.getReturnType().getName()
-										.equals("void"))) {
+								.equals("void"))) {
 							throw new IllegalArgumentException(
 									"Invalid PostConstruct annotation");
 						}
@@ -176,14 +183,12 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 								|| (Modifier.isStatic(method.getModifiers()))
 								|| (method.getExceptionTypes().length > 0)
 								|| (!method.getReturnType().getName()
-										.equals("void"))) {
+								.equals("void"))) {
 							throw new IllegalArgumentException(
 									"Invalid PreDestroy annotation");
 						}
 						preDestroy = method;
 					}
-				}
-				catch (Throwable t) { /*nope*/ } //FIXME
 				}
 				if (postConstruct != null) {
 					annotations.add(new AnnotationCacheEntry(postConstruct
@@ -219,7 +224,7 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 	}
 
 	protected Class<?> loadClassMaybePrivileged(final String className,
-			final ClassLoader classLoader) throws ClassNotFoundException {
+												final ClassLoader classLoader) throws ClassNotFoundException {
 		Class<?> clazz;
 		if (SecurityUtil.isPackageProtectionEnabled()) {
 			try {
@@ -278,7 +283,7 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 	}
 
 	private static Method getMethod(final Class<?> clazz,
-			final AnnotationCacheEntry entry) {
+									final AnnotationCacheEntry entry) {
 		Method result = null;
 
 		try {
@@ -296,8 +301,8 @@ public class InstanceManager implements org.apache.tomcat.InstanceManager {
 		private final AnnotationCacheEntryType type;
 
 		public AnnotationCacheEntry(String accessibleObjectName,
-				Class<?>[] paramTypes, String name,
-				AnnotationCacheEntryType type) {
+									Class<?>[] paramTypes, String name,
+									AnnotationCacheEntryType type) {
 			this.accessibleObjectName = accessibleObjectName;
 			if (paramTypes != null) {
 				this.paramTypes = Arrays.copyOf(paramTypes, paramTypes.length);
