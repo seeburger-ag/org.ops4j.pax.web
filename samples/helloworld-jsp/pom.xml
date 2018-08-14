@@ -184,6 +184,12 @@
 			<artifactId>pax-web-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.web</groupId>
+            <artifactId>jbossweb</artifactId>
+            <version>7.0.13.Final</version>
+            <scope>provided</scope>
+        </dependency>
 	</dependencies>
 
 </project>
