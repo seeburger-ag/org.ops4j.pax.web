@@ -15,7 +15,7 @@
 		<relativePath>../pom.xml</relativePath>
 		<groupId>org.ops4j.pax</groupId>
 		<artifactId>web</artifactId>
-		<version>4.2.2.SEE25-SNAPSHOT</version>
+		<version>4.2.2.SEE25</version>
 	</parent>
 
 	<groupId>org.ops4j.pax.web</groupId>
@@ -526,5 +526,5 @@
 
 	</dependencies>
 
-	<version>4.2.2.SEE25-SNAPSHOT</version>
+	<version>4.2.2.SEE25</version>
 </project>
