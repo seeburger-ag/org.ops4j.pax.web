@@ -114,7 +114,7 @@
                         javax.tools,
                         org.osgi.util.tracker
                         </Import-Package>
-                        <Private-Package>org.apache.tomcat.util.*</Private-Package>
+                        <Private-Package>org.apache.tomcat.util,org.apache.tomcat.util.res</Private-Package>
                         <Export-Package>
                         ${bundle.namespace}; version="${project.version}",
                         org.apache.tomcat.util.security; version="2.2"; -split-package:=merge-first,
