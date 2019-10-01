@@ -3,6 +3,8 @@ package org.ops4j.pax.web.service.tomcat.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 
 import javax.servlet.RequestDispatcher;
@@ -134,8 +136,12 @@ public class TomcatResourceServlet extends HttpServlet {
             }
             return;
         }
-		final URL url = httpContext.getResource(mapping);
-
+		URL url = null;
+		mapping = normalizePath(mapping);
+		if(mapping!=null)
+		{
+			url = httpContext.getResource(mapping);
+		}
 		if (url == null
 				|| (url != null && "//".equals(mapping) && "bundleentry".equalsIgnoreCase(url.getProtocol()) )
 				|| (url != null && "/".equals(mapping)) && "bundleentry".equalsIgnoreCase(url.getProtocol()) ) {
@@ -257,5 +263,30 @@ public class TomcatResourceServlet extends HttpServlet {
 		}
 		return exception;
 
+	}
+	
+	private String normalizePath(String path)
+	{
+		if(path==null)
+		{
+			return null;
+		}
+		if(!path.contains(".."))
+		{
+			return path;
+		}
+		Path result = Paths.get(path);
+		if(result!=null)
+		{
+			String normalized = result.normalize().toString();
+			LOG.debug("Normalized path [{}] to [{}]",path,normalized);
+			if(normalized.isEmpty() || normalized.equals("/"))
+			{
+				//if we are on root level return null
+				return null;
+			}
+			return normalized;
+		}
+		return path;
 	}
 }
