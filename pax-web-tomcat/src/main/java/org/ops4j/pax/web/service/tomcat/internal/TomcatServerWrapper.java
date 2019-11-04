@@ -510,13 +510,16 @@ public class TomcatServerWrapper implements ServerWrapper {
 		}
 
 		final HttpServiceContext context = contextMap.remove(httpContext);
-		try
+		if(context!=null && context.getParent()!=null && ((Context)context.getParent()).getInstanceManager()!=null)
 		{
-		    this.server.removeChild(context);
-		}
-		catch(Exception e)
-		{
-		    LOG.info("Error while removing context."+e.getMessage());
+    		try
+    		{
+    		    this.server.removeChild(context);
+    		}
+    		catch(Exception e)
+    		{
+    		    LOG.info("Error while removing context [{}]",e.getMessage());
+    		}
 		}
 		if (context == null) {
 			throw new RemoveContextException(
