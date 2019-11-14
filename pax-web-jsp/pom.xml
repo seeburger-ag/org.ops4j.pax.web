@@ -6,13 +6,13 @@
 		<relativePath>../pom.xml</relativePath>
 		<groupId>org.ops4j.pax</groupId>
 		<artifactId>web</artifactId>
-		<version>4.2.2.SEE28</version>
+		<version>4.2.2.SEE29-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.ops4j.pax.web</groupId>
 	<artifactId>pax-web-jsp</artifactId>
 	<packaging>bundle</packaging>
-    <version>4.2.2.SEE28</version>
+    <version>4.2.2.SEE29-SNAPSHOT</version>
 
 	<name>OPS4J Pax Web - Jsp Support</name>
 	<description>
