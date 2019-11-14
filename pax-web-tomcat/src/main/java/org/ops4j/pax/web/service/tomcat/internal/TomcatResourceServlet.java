@@ -106,7 +106,7 @@ public class TomcatResourceServlet extends HttpServlet {
 				}
 			}
 		}
-        if ("//".equals(mapping))
+        if (mapping!=null && mapping.replace("/", "").length()==0)
         {
             String[] welcomes = (String[])getServletContext().getAttribute(Globals.WELCOME_FILES_ATTR);
             if (welcomes != null)
