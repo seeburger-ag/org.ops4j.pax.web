@@ -78,7 +78,8 @@ public class ResourceDelegatingBundleClassLoader extends BundleClassLoader {
 					// ignore
 				}
 			}
-			addToCache(name, resources);
+			if(!resources.isEmpty())
+			    addToCache(name, resources);
 		}
 		
 		Enumeration<URL> elements = resources.elements();
@@ -105,13 +106,14 @@ public class ResourceDelegatingBundleClassLoader extends BundleClassLoader {
 					// ignore
 				}
 			}
-			addToCache(name, resources);
+			if(!resources.isEmpty())
+			    addToCache(name, resources);
 		}
 
 		return resources.elements();
 	}
 
-	protected void addToCache(String name, Vector<URL> resources) {
+	protected synchronized void addToCache(String name, Vector<URL> resources) {
 		lruCache.put(name, resources);
 	}
 
