@@ -3,6 +3,7 @@ package org.ops4j.pax.web.service.tomcat.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
@@ -88,23 +89,18 @@ public class TomcatResourceServlet extends HttpServlet {
 				pathInfo = request.getPathInfo();
 			}
 		} else {
-			included = Boolean.FALSE;
-			if (contextName.equals(alias)) {
-				// special handling since resouceServlet has default name
-				// attached to it
-				if (!"default".equalsIgnoreCase(name)) {
-					mapping = name + request.getRequestURI();
-				} else {
-					mapping = request.getRequestURI();
-				}
-			} else {
-				mapping = request.getRequestURI()
-						.replaceFirst(contextName, "/");
-				if (!"default".equalsIgnoreCase(name)) {
-					mapping = mapping.replaceFirst(alias,
-							Matcher.quoteReplacement(name)); // TODO
-				}
-			}
+            included = Boolean.FALSE;
+            // getRequestURI will return full path with context name
+            mapping = request.getRequestURI();
+            if (!"/".equals(contextName) && mapping.startsWith(contextName)) {
+                mapping = mapping.substring(contextName.length());
+            }
+            if (!"/".equals(alias) && mapping.startsWith(alias)) {
+                mapping = mapping.substring(alias.length());
+            }
+            if (!name.isEmpty() && !"default".equals(name)) {
+                mapping = name + mapping;
+            }
 		}
         if (mapping!=null && mapping.replace("/", "").length()==0)
         {
@@ -136,6 +132,9 @@ public class TomcatResourceServlet extends HttpServlet {
             }
             return;
         }
+
+        boolean endsWithSlash = (mapping == null ? request.getServletPath() : mapping).endsWith("/");
+
 		URL url = null;
 		mapping = normalizePath(mapping);
 		if(mapping!=null)
@@ -156,72 +155,125 @@ public class TomcatResourceServlet extends HttpServlet {
 		}
 
 		// For Performanceimprovements turn caching on
-
+        URLConnection connection = null;
 		try {
-			// new Resource(url.openStream());
-			url.openStream();
-		} catch (IOException ioex) {
-			response.sendError(HttpServletResponse.SC_NOT_FOUND);
-			return;
+		    boolean foundResource;
+            try
+            {
+                // new Resource(url.openStream());
+                connection = url.openConnection();
+                connection.connect();
+                foundResource = true;
+            }
+            catch (IOException ioex)
+            {
+                foundResource = false;
+            }
+            if (!foundResource && !endsWithSlash) {
+                if (!response.isCommitted()) {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                }
+                return;
+            }
+            // let's check if this is maybe a directory. org.osgi.framework.Bundle.getResource()
+            // returns proper URL for directory entry and we can't tell if it's a directory or not
+            boolean possibleDirectoryBundleEntry = false;
+            if (foundResource) {
+                try (InputStream peek = url.openStream()) {
+                    possibleDirectoryBundleEntry = peek.available() == 0;
+                }
+            }
+
+            if (!foundResource) {
+                // still not found anything, then do the following ...
+                if (!response.isCommitted()) {
+                    if (endsWithSlash) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    } else {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    }
+                }
+                return;
+            } else if (foundResource && url.getPath().endsWith("/")) {
+                // directory listing
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+    		// if the request contains an etag and its the same for the
+    		// resource, we deliver a NOT MODIFIED response
+
+    		// TODO: add lastModified, probably need to use the caching of the
+    		// DefaultServlet ...
+    		// set the etag
+    		// response.setHeader(ETAG, eTag);
+    		// String mimeType = m_httpContext.getMimeType(mapping);
+    		String mimeType = getServletContext().getMimeType(url.getFile());
+    		/*
+    		 * No Fallback if (mimeType == null) { Buffer mimeTypeBuf =
+    		 * mimeTypes.getMimeByExtension(mapping); mimeType = mimeTypeBuf != null
+    		 * ? mimeTypeBuf.toString() : null; }
+    		 */
+
+    		if (mimeType == null) {
+    			try {
+    				if (url != null && url.openConnection() != null) {
+    					mimeType = url.openConnection().getContentType();
+    				}
+    			} catch (IOException ignore) {
+    				// we do not care about such an exception as the fact that
+    				// we are using also the connection for
+    				// finding the mime type is just a "nice to have" not an
+    				// requirement
+    			} catch (NullPointerException npe) {
+    				// IGNORE
+    			}
+    		}
+
+    		if (mimeType == null) {
+    			ServletContext servletContext = getServletConfig()
+    					.getServletContext();
+    			mimeType = servletContext.getMimeType(mapping);
+    		}
+
+    		if (mimeType != null) {
+    			response.setContentType(mimeType);
+    		}
+
+    		ServletOutputStream out = response.getOutputStream();
+    		if (out != null) { // null should be just in unit testing
+    			ServletResponse r = response;
+    			while (r instanceof ServletResponseWrapper) {
+    				r = ((ServletResponseWrapper) r).getResponse();
+    			}
+    //			if (r instanceof ResponseFacade) {
+    //				((ResponseFacade) r).getContentWritten();
+    //			}
+
+    			IOException ioException = copyRange(url.openStream(), out);
+
+    			if (ioException != null) {
+    				response.sendError(HttpServletResponse.SC_NOT_FOUND);
+    				return;
+    			}
+
+    		}
 		}
-		// if the request contains an etag and its the same for the
-		// resource, we deliver a NOT MODIFIED response
-
-		// TODO: add lastModified, probably need to use the caching of the
-		// DefaultServlet ...
-		// set the etag
-		// response.setHeader(ETAG, eTag);
-		// String mimeType = m_httpContext.getMimeType(mapping);
-		String mimeType = getServletContext().getMimeType(url.getFile());
-		/*
-		 * No Fallback if (mimeType == null) { Buffer mimeTypeBuf =
-		 * mimeTypes.getMimeByExtension(mapping); mimeType = mimeTypeBuf != null
-		 * ? mimeTypeBuf.toString() : null; }
-		 */
-
-		if (mimeType == null) {
-			try {
-				if (url != null && url.openConnection() != null) {
-					mimeType = url.openConnection().getContentType();
-				}
-			} catch (IOException ignore) {
-				// we do not care about such an exception as the fact that
-				// we are using also the connection for
-				// finding the mime type is just a "nice to have" not an
-				// requirement
-			} catch (NullPointerException npe) {
-				// IGNORE
-			}
+		finally
+		{
+            if (connection != null)
+            {
+                try
+                {
+                    connection.getInputStream().close();
+                }
+                catch (IOException e)
+                {
+                    // ignore
+                }
+            }
 		}
 
-		if (mimeType == null) {
-			ServletContext servletContext = getServletConfig()
-					.getServletContext();
-			mimeType = servletContext.getMimeType(mapping);
-		}
-
-		if (mimeType != null) {
-			response.setContentType(mimeType);
-		}
-
-		ServletOutputStream out = response.getOutputStream();
-		if (out != null) { // null should be just in unit testing
-			ServletResponse r = response;
-			while (r instanceof ServletResponseWrapper) {
-				r = ((ServletResponseWrapper) r).getResponse();
-			}
-//			if (r instanceof ResponseFacade) {
-//				((ResponseFacade) r).getContentWritten();
-//			}
-
-			IOException ioException = copyRange(url.openStream(), out);
-
-			if (ioException != null) {
-				response.sendError(HttpServletResponse.SC_NOT_FOUND);
-				return;
-			}
-
-		}
 
 	}
 
@@ -264,7 +316,7 @@ public class TomcatResourceServlet extends HttpServlet {
 		return exception;
 
 	}
-	
+
 	private String normalizePath(String path)
 	{
 		if(path==null)
